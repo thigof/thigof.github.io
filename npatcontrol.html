@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPAT CONTROL</title>
+    <style>
+        form {
+            background-color: #f2f2f2;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%; /* Adicionado */
+        }
+    
+        form label {
+            margin-bottom: 8px;
+        }
+    
+        form input[type="text"] {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+    
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+    
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        th {
+            background-color: #f2f2f2;
+        }
+        
+       /*  @media only screen and (max-width: 600px) {
+            form input[type="text"], 
+            form button {
+                width: 100%;
+            }
+    
+            table th {
+                display: none; 
+            }
+    
+            table td {
+                display: block; 
+                text-align: center;
+            }
+    
+            table td:before {
+                content: attr(data-th);
+                display: inline-block;
+                font-weight: bold;
+                margin-right: 5px;
+                width: 100px;
+                white-space: nowrap;
+            }
+        } */
+        
+    </style>
+</head>
+<body>
+    <form>
+        <input type="checkbox" id="checkbox-npat">
+        <label for="checkbox-npat">NPAT</label>
+        <input type="text" id="npat"><br>
+
+        <input type="checkbox" id="checkbox-descricao">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao"><br>
+
+        <input type="checkbox" id="checkbox-local">
+        <label for="local">Local</label>
+        <input type="text" id="local"><br>
+
+        <input type="checkbox" id="checkbox-estado">
+        <label for="estado">Estado</label>
+        <input type="text" id="estado"><br>
+
+        <input type="checkbox" id="checkbox-obs">
+        <label for="obs">Observação</label>
+        <input type="text" id="obs"><br>
+
+        <button type="button" onclick="adicionarDados()">Adicionar</button>
+    </form>
+
+    <form>
+        <button type="button" onclick="gerarCSV()">Gerar CSV</button>
+        <button type="button" onclick="gerarHTML()">Gerar HTML</button>
+        <button type="button" onclick="limparTabela()">Limpar Tabela</button>
+
+        <table id="tabela-dados">
+            <thead>
+                <tr>
+                    <th>NPAT</th>
+                    <th>Descrição</th>
+                    <th>Local</th>
+                    <th>Estado</th>
+                    <th>Observação</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </form>
+
+
+    <script>
+        // Adiciona um ouvinte para prevenir a atualização da página ao pressionar Enter
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+            }
+        });
+
+        // Carrega os dados da tabela do armazenamento local ao iniciar a página
+        window.onload = function () {
+            carregarDadosTabela();
+            carregarConfiguracoes();
+        };
+
+        function adicionarDados() {
+            // Obter valores dos campos de entrada
+            var npat = document.getElementById("npat").value;
+            var descricao = document.getElementById("descricao").value;
+            var local = document.getElementById("local").value;
+            var estado = document.getElementById("estado").value;
+            var obs = document.getElementById("obs").value;
+
+            // Criar nova linha na tabela
+            var tabela = document.getElementById("tabela-dados").getElementsByTagName("tbody")[0];
+            var novaLinha = tabela.insertRow();
+
+            // Adicionar células à nova linha
+            var celulaNpat = novaLinha.insertCell(0);
+            var celulaDescricao = novaLinha.insertCell(1);
+            var celulaLocal = novaLinha.insertCell(2);
+            var celulaEstado = novaLinha.insertCell(3);
+            var celulaObs = novaLinha.insertCell(4);
+            var celulaAcao = novaLinha.insertCell(5); // Nova célula para o botão de excluir
+
+            // Preencher células com valores dos campos de entrada
+            celulaNpat.innerHTML = npat;
+            celulaDescricao.innerHTML = descricao;
+            celulaLocal.innerHTML = local;
+            celulaEstado.innerHTML = estado;
+            celulaObs.innerHTML = obs;
+
+            // Limpar campos de entrada
+            if (!document.getElementById("checkbox-npat").checked) {
+                document.getElementById("npat").value = "";
+            }
+            if (!document.getElementById("checkbox-descricao").checked) {
+                document.getElementById("descricao").value = "";
+            }
+            if (!document.getElementById("checkbox-local").checked) {
+                document.getElementById("local").value = "";
+            }
+            if (!document.getElementById("checkbox-estado").checked) {
+                document.getElementById("estado").value = "";
+            }
+            if (!document.getElementById("checkbox-obs").checked) {
+                document.getElementById("obs").value = "";
+            }
+
+            // Salva os dados da tabela no armazenamento local após adicionar dados
+            salvarDadosTabela();
+            // Salvar as configurações
+            salvarConfiguracoes();
+
+            // Botão de excluir
+            var botaoExcluir = document.createElement("button");
+            botaoExcluir.innerHTML = "X";
+            botaoExcluir.onclick = function () {
+                removerLinha(this);
+            };
+            celulaAcao.appendChild(botaoExcluir);
+
+        }
+
+        function limparTabela() {
+            // Limpar a tabela removendo todas as linhas do corpo (tbody)
+            var tabela = document.getElementById("tabela-dados").getElementsByTagName("tbody")[0];
+            tabela.innerHTML = "";
+
+            // Limpa os dados salvos no armazenamento local
+            localStorage.removeItem("dadosTabela");
+
+            // Salvar as configurações
+            salvarConfiguracoes();
+        }
+        
+
+        function removerLinha(botao) {
+            var linha = botao.parentNode.parentNode;
+            linha.parentNode.removeChild(linha);
+            // Após remover a linha, salvar os dados atualizados no armazenamento local
+            salvarDadosTabela();
+        }
+
+        /*var labelsMarcados = [];
+
+        function adicionarDados() {
+            var npat = document.getElementById("npat").value;
+            var descricao = document.getElementById("descricao").value;
+            var local = document.getElementById("local").value;
+            var estado = document.getElementById("estado").value;
+
+            var linha = "<tr>";
+            if (document.getElementById("checkbox-npat").checked) {
+                linha += "<td>" + npat + "</td>";
+                labelsMarcados.push("npat");
+            }
+            if (document.getElementById("checkbox-descricao").checked) {
+                linha += "<td>" + descricao + "</td>";
+                labelsMarcados.push("descricao");
+            }
+            if (document.getElementById("checkbox-local").checked) {
+                linha += "<td>" + local + "</td>";
+                labelsMarcados.push("local");
+            }
+            if (document.getElementById("checkbox-estado").checked) {
+                linha += "<td>" + estado + "</td>";
+                labelsMarcados.push("estado");
+            }
+            linha += "</tr>";
+
+            var tabela = document.getElementById("tabela-dados");
+            tabela.innerHTML += linha;
+
+            document.getElementById("npat").value = "";
+            document.getElementById("descricao").value = "";
+            document.getElementById("local").value = "";
+            document.getElementById("estado").value = "";
+        }*/
+
+        function gerarCSV() {
+            var tabela = document.getElementById("tabela-dados");
+            var linhas = tabela.rows;
+
+            var csv = "NPAT;Descrição;Local;Estado;Observação\n";
+            for (var i = 1; i < linhas.length; i++) {
+                var npat = linhas[i].cells[0].innerText;
+                var descricao = linhas[i].cells[1].innerText;
+                var local = linhas[i].cells[2].innerText;
+                var estado = linhas[i].cells[3].innerText;
+                var obs = linhas[i].cells[4].innerText;
+
+                csv += npat + ";" + descricao + ";" + local + ";" + estado + ";" + obs + "\n";
+            }
+
+            var nomeArquivo = prompt("Digite o nome do arquivo CSV:");
+            if (nomeArquivo) {
+                var link = document.createElement("a");
+                link.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(csv));
+                link.setAttribute("download", nomeArquivo + ".csv");
+                link.style.display = "none";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function gerarHTML() {
+            var tabela = document.getElementById("tabela-dados");
+            var codigoHTML = tabela.outerHTML;
+
+            var nomeArquivo = prompt("Digite o nome do arquivo HTML:");
+            if (nomeArquivo) {
+                var link = document.createElement("a");
+                link.setAttribute("href", "data:text/html;charset=utf-8," + encodeURIComponent(codigoHTML));
+                link.setAttribute("download", nomeArquivo + ".html");
+                link.style.display = "none";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function salvarDadosTabela() {
+            var dadosTabela = [];
+            var linhas = document.getElementById("tabela-dados").getElementsByTagName("tbody")[0].rows;
+
+            for (var i = 0; i < linhas.length; i++) {
+                var npat = linhas[i].cells[0].innerText;
+                var descricao = linhas[i].cells[1].innerText;
+                var local = linhas[i].cells[2].innerText;
+                var estado = linhas[i].cells[3].innerText;
+                var obs = linhas[i].cells[4].innerText;
+
+                dadosTabela.push({ npat, descricao, local, estado, obs });
+            }
+
+            // Salva os dados no armazenamento local
+            localStorage.setItem("dadosTabela", JSON.stringify(dadosTabela));
+        }
+
+        function carregarDadosTabela() {
+            var dadosTabela = JSON.parse(localStorage.getItem("dadosTabela"));
+
+            if (dadosTabela) {
+                var tabela = document.getElementById("tabela-dados").getElementsByTagName("tbody")[0];
+
+                for (var i = 0; i < dadosTabela.length; i++) {
+                    var novaLinha = tabela.insertRow();
+                    var celulaNpat = novaLinha.insertCell(0);
+                    var celulaDescricao = novaLinha.insertCell(1);
+                    var celulaLocal = novaLinha.insertCell(2);
+                    var celulaEstado = novaLinha.insertCell(3);
+                    var celulaObs = novaLinha.insertCell(4);
+                    var celulaAcao = novaLinha.insertCell(5);
+
+                    celulaNpat.innerHTML = dadosTabela[i].npat;
+                    celulaDescricao.innerHTML = dadosTabela[i].descricao;
+                    celulaLocal.innerHTML = dadosTabela[i].local;
+                    celulaEstado.innerHTML = dadosTabela[i].estado;
+                    celulaObs.innerHTML = dadosTabela[i].obs;
+
+                    var botaoExcluir = document.createElement("button");
+                    botaoExcluir.innerHTML = "X";
+                    botaoExcluir.onclick = function () {
+                        removerLinha(this);
+                    };
+                    celulaAcao.appendChild(botaoExcluir);
+                }
+            }
+        }
+
+        function salvarConfiguracoes() {
+            var configuracoes = {
+                npat: document.getElementById("checkbox-npat").checked,
+                descricao: document.getElementById("checkbox-descricao").checked,
+                local: document.getElementById("checkbox-local").checked,
+                estado: document.getElementById("checkbox-estado").checked,
+                obs: document.getElementById("checkbox-obs").checked,
+            };
+
+            localStorage.setItem("configuracoes", JSON.stringify(configuracoes));
+        }
+
+        function carregarConfiguracoes() {
+            var configuracoes = JSON.parse(localStorage.getItem("configuracoes"));
+
+            if (configuracoes) {
+                document.getElementById("checkbox-npat").checked = configuracoes.npat;
+                document.getElementById("checkbox-descricao").checked = configuracoes.descricao;
+                document.getElementById("checkbox-local").checked = configuracoes.local;
+                document.getElementById("checkbox-estado").checked = configuracoes.estado;
+                document.getElementById("checkbox-obs").checked = configuracoes.obs;
+            }
+        }
+    </script>
+
+</body>
+</html>
