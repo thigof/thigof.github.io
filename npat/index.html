@@ -14,7 +14,6 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             max-width: 600px;
             width: 100%;
-            /* Adicionado */
         }
 
         form label {
@@ -197,45 +196,38 @@
             }
         }
 
-        // Adiciona um ouvinte para prevenir a atualização da página ao pressionar Enter
         document.addEventListener("keydown", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault();
             }
         });
 
-        // Carrega os dados da tabela do armazenamento local ao iniciar a página
         window.onload = function () {
             carregarDadosTabela();
             carregarConfiguracoes();
         };
 
         function adicionarDados() {
-            // Obter valores dos campos de entrada
             var npat = document.getElementById("npat").value;
             var descricao = document.getElementById("descricao").value;
             var local = document.getElementById("local").value;
             var estado = document.getElementById("estado").value;
             var obs = document.getElementById("obs").value;
             if (npat === '') {
-                // Se o campo NPAT estiver vazio, adiciona o texto "sem placa de patrimônio" no campo de observação
                 var obs = document.getElementById("obs").value = obs + ';sem placa de patrimônio';
             }
 
 
-            // Criar nova linha na tabela
             var tabela = document.getElementById("tabela-dados").getElementsByTagName("tbody")[0];
             var novaLinha = tabela.insertRow();
 
-            // Adicionar células à nova linha
             var celulaNpat = novaLinha.insertCell(0);
             var celulaDescricao = novaLinha.insertCell(1);
             var celulaLocal = novaLinha.insertCell(2);
             var celulaEstado = novaLinha.insertCell(3);
             var celulaObs = novaLinha.insertCell(4);
-            var celulaAcao = novaLinha.insertCell(5); // Nova célula para o botão de excluir
+            var celulaAcao = novaLinha.insertCell(5); 
 
-            // Preencher células com valores dos campos de entrada
             celulaNpat.innerHTML = npat;
             celulaDescricao.innerHTML = descricao;
             celulaLocal.innerHTML = local;
@@ -244,7 +236,6 @@
 
 
 
-            // Limpar campos de entrada
             if (!document.getElementById("checkbox-npat").checked) {
                 document.getElementById("npat").value = "";
             }
@@ -261,12 +252,9 @@
                 document.getElementById("obs").value = "";
             }
 
-            // Salva os dados da tabela no armazenamento local após adicionar dados
             salvarDadosTabela();
-            // Salvar as configurações
             salvarConfiguracoes();
 
-            // Botão de excluir
             var botaoExcluir = document.createElement("button");
             botaoExcluir.innerHTML = "X";
             botaoExcluir.onclick = function () {
@@ -277,14 +265,10 @@
         }
 
         function limparTabela() {
-            // Limpar a tabela removendo todas as linhas do corpo (tbody)
             var tabela = document.getElementById("tabela-dados").getElementsByTagName("tbody")[0];
             tabela.innerHTML = "";
-
-            // Limpa os dados salvos no armazenamento local
             localStorage.removeItem("dadosTabela");
 
-            // Salvar as configurações
             salvarConfiguracoes();
         }
 
@@ -292,45 +276,8 @@
         function removerLinha(botao) {
             var linha = botao.parentNode.parentNode;
             linha.parentNode.removeChild(linha);
-            // Após remover a linha, salvar os dados atualizados no armazenamento local
             salvarDadosTabela();
         }
-
-        /*var labelsMarcados = [];
-
-        function adicionarDados() {
-            var npat = document.getElementById("npat").value;
-            var descricao = document.getElementById("descricao").value;
-            var local = document.getElementById("local").value;
-            var estado = document.getElementById("estado").value;
-
-            var linha = "<tr>";
-            if (document.getElementById("checkbox-npat").checked) {
-                linha += "<td>" + npat + "</td>";
-                labelsMarcados.push("npat");
-            }
-            if (document.getElementById("checkbox-descricao").checked) {
-                linha += "<td>" + descricao + "</td>";
-                labelsMarcados.push("descricao");
-            }
-            if (document.getElementById("checkbox-local").checked) {
-                linha += "<td>" + local + "</td>";
-                labelsMarcados.push("local");
-            }
-            if (document.getElementById("checkbox-estado").checked) {
-                linha += "<td>" + estado + "</td>";
-                labelsMarcados.push("estado");
-            }
-            linha += "</tr>";
-
-            var tabela = document.getElementById("tabela-dados");
-            tabela.innerHTML += linha;
-
-            document.getElementById("npat").value = "";
-            document.getElementById("descricao").value = "";
-            document.getElementById("local").value = "";
-            document.getElementById("estado").value = "";
-        }*/
 
         function gerarCSV() {
             var tabela = document.getElementById("tabela-dados");
@@ -389,7 +336,6 @@
                 dadosTabela.push({ npat, descricao, local, estado, obs });
             }
 
-            // Salva os dados no armazenamento local
             localStorage.setItem("dadosTabela", JSON.stringify(dadosTabela));
         }
 
