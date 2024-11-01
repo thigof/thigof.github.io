@@ -16,7 +16,7 @@
         <input @:change="handleNpat" v-model="form.npat" type="text" style="width: auto;" />
         <button @click="handleNpat" :disabled="!computedNpat">Pesquisar</button>
       </div>
-      <label>
+      <label>0
         <input type="checkbox" v-model="form.descricaoChecked" />
         Descrição
       </label>
