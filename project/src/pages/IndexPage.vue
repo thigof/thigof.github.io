@@ -12,10 +12,12 @@
           NPAT
           <b class="text-red"> {{ (computedNpat) ? "" : (form.npat.length) ? "Não encontrado" : "" }}</b>
         </label>
+
         <div class="row">
           <input @:change="handleNpat" v-model="form.npat" type="text" style="width: auto;" />
           <button class="q-ml-sm" @click.prevent="handleNpat" :disabled="!computedNpat">Pesquisar</button>
         </div>
+
         <label>
           <input type="checkbox" v-model="form.descricaoChecked" />
           Descrição
@@ -46,12 +48,15 @@
       </fieldset>
 
       <fieldset class="q-mt-lg q-mb-lg">
-        <q-btn alt="" color="green-4" icon="description" class="q-ml-sm" type="button" @click="gerarCSV">CSV</q-btn>
-        <q-btn icon="code" color="green-4" class="q-ml-sm" type="button" @click="gerarHTML">HTML</q-btn>
+        <q-btn alt="" color="green-4" icon="description" class="q-ml-sm" type="button"
+          @click="gerarCSV(data.selected)">CSV</q-btn>
+        <q-btn icon="code" color="green-4" class="q-ml-sm" type="button"
+          @click.prevent="gerarTableRelatorio">Relatorio</q-btn>
+        <q-btn icon="code" color="green-4" class="q-ml-sm" type="button" @click="gerarTableTermo">Termo</q-btn>
         <q-btn icon="clear" color="red-4" class="q-ml-sm" type="button" @click="limparTabela">LIMPAR</q-btn>
       </fieldset>
 
-      <q-table bordered :rows="data.selected" :columns="data.colunas" row-key="NRPATRIMONIO1">
+      <q-table :rows="data.selected" :columns="data.colunas" row-key="NRPATRIMONIO1" virtual-scroll flat bordered>
       </q-table>
     </q-form>
   </q-page>
@@ -59,7 +64,8 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
-import Papa from 'papaparse';
+import Papa, { LocalChunkSize } from 'papaparse';
+
 
 const form = ref({
   npatChecked: false,
@@ -72,6 +78,9 @@ const form = ref({
   estado: '',
   obsChecked: false,
   obs: '',
+  search1: '',
+  search2: '',
+  searchColumn: ''
 });
 
 const data = reactive({
@@ -148,12 +157,54 @@ const computedNpat = computed(() => {
   }
 });
 
-function gerarCSV() {
-  // Lógica para gerar o CSV
+function gerarCSV(data, filename = 'data.csv', separator = ';') {
+  const csv = [Object.keys(data[0]).join(separator), ...data.map(row => Object.values(row).join(separator))].join('\n');
+  const link = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+    download: filename
+  });
+  link.click();
 }
 
-function gerarHTML() {
-  // Lógica para gerar o HTML
+const gerarTableRelatorio = () => {
+  gerarTableFormate(data.selected.map(e => ({
+    NPAT: e['NRPATRIMONIO1'] || "",
+    Setor: e['NOME_SETOR'] || "",
+    Local: e['LOCALIZACAO'] || "",
+    Valor: Number(e['VALOR']).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || "",
+    Estado: e['DESC_ESTADO'] || "",
+  })))
+}
+
+const gerarTableTermo = () => {
+  gerarTableFormate(data.selected.map(e => ({
+    NPAT: e['NRPATRIMONIO1'] || "",
+    Descrição: e['DESCRICAO'] || "",
+    Local: e['LOCALIZACAO'] || "",
+    Setor: e['NOME_SETOR'],
+    Estado: e['DESC_ESTADO'] || "",
+    Valor: Number(e['VALOR']).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || "",
+  })))
+}
+
+
+function gerarTable(data) {
+  const tableHTML = `<table border="1" cellpadding="1" cellspacing="1" style="width:100%;" align="center"><thead><tr>${Object.keys(data[0]).map(h => `<th><strong>${h}<strong></th>`).join('')}</tr></thead><tbody>${data.map(row => `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  // navigator.clipboard.writeText(tableHTML);
+  return tableHTML
+}
+
+function gerarTableFormate(data) {
+  const tableHTML = gerarTable(data)
+  const tempElement = document.createElement('div');
+  tempElement.innerHTML = tableHTML;
+  document.body.appendChild(tempElement);
+  const range = document.createRange();
+  range.selectNodeContents(tempElement);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  document.execCommand('copy');
+  document.body.removeChild(tempElement);
 }
 
 function limparTabela() {
@@ -163,38 +214,30 @@ function limparTabela() {
 
 // Função para enviar o formulário (se necessário)
 function submitForm() {
-  if (!form.value.npat) {
-    const obj = Object.fromEntries(data.fields.map(key => [key, ""]));
-    obj.DESCRICAO = form.value.descricao
-    obj.LOCALIZACAO = form.value.local
-    obj.ESTADO = form.value.estado
-    obj.OBSERVAÇÃO = form.value.obs
-    obj.SITUAÇÃO = "SEM PLACA"
-    data.selected.push(obj)
+  const obj = Object.fromEntries(data.fields.map(key => [key, ""]));
+  obj.NRPATRIMONIO1 = form.value.npat;
+  obj.DESCRICAO = form.value.descricao;
+  obj.LOCALIZACAO = form.value.local;
+  obj.ESTADO = form.value.estado;
+  obj.OBSERVAÇÃO = form.value.obs;
+
+  if (!form.value.npat || form.value.npat === "0") {
+    obj.SITUAÇÃO = "SEM PLACA";
+    data.selected.push(obj);
   } else {
-    const item = data?.values?.find(e => e.NRPATRIMONIO1 === form.value.npat)
+    const item = data?.values?.find(e => e.NRPATRIMONIO1 === form.value.npat);
     if (item) {
       console.log("Adicionar: ", item);
-      item.DESCRICAO = form.value.descricao
-      item.LOCALIZACAO = form.value.local
-      item.ESTADO = form.value.estado
-      item.OBSERVAÇÃO = form.value.obs
-      item.SITUAÇÃO = "REGULAR"
-      data.selected.push(item)
+      Object.assign(item, obj, { SITUAÇÃO: "REGULAR" });
+      data.selected.push(item);
     } else {
-      const obj = Object.fromEntries(data.fields.map(key => [key, ""]));
-      obj.NRPATRIMONIO1 = form.value.npat
-      obj.DESCRICAO = form.value.descricao
-      obj.LOCALIZACAO = form.value.local
-      obj.ESTADO = form.value.estado
-      obj.OBSERVAÇÃO = form.value.obs
-      obj.SITUAÇÃO = "SEM REGISTRO"
-      data.selected.push(obj)
+      obj.SITUAÇÃO = "SEM REGISTRO";
+      data.selected.push(obj);
     }
   }
-  saveData()
-
+  saveData();
 }
+
 try {
   const storedData = localStorage.getItem('data');
   if (storedData) {
@@ -211,3 +254,17 @@ try {
 onMounted(() => {
 });
 </script>
+
+<style scoped lang="scss">
+.q-table {
+
+  tbody {
+
+    td {
+      padding: 2px !important;
+      height: 20px;
+    }
+  }
+
+}
+</style>
