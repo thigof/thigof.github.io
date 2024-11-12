@@ -5,102 +5,51 @@
     </fieldset>
     <p class="">Dados: {{ data?.values?.length }}</p>
 
-    <div class="row flex text-blue-grey-10"></div>
-
     <div class="row items-center q-gutter-md" style="height: 100%">
-      <q-input
-        @change="handleNpat"
-        v-model="form.npat"
+      <InputFixed
+        inputType="number"
+        :inputText="form.npat"
+        :selectAllText="true"
+        @update="(e) => handleNpat(e)"
         :label="
           computedNpat ? 'NPAT' : form.npat.length ? 'Não encontrado' : 'NPAT'
         "
-        dense
-        outlined
-        class="col-grow"
-        :disable="form.npatChecked"
       />
       <q-btn
         dense
         @click.prevent="handleNpat"
-        :disabled="computedNpat || form.npatChecked"
+        :disabled="computedNpat"
         size="btn_size_round_md"
         color="primary"
         label="Pesquisar"
         class="col-shrink"
       />
     </div>
-    <q-checkbox
-      dense
-      color="blue-grey"
-      class="text-blue-grey"
-      v-model="form.npatChecked"
-      label="Fixar NPAT"
-    />
 
-    <q-input
-      dense
-      outlined
-      v-model="form.descricao"
+    <InputFixed
+      :inputText="form.descricao"
+      @update="(e) => (form.descricao = e)"
       label="Descrição"
-      type="text"
-      :disable="form.descricaoChecked"
-    />
-    <q-checkbox
-      dense
-      color="blue-grey"
-      class="text-blue-grey"
-      v-model="form.descricaoChecked"
-      label="Fixar descrição"
     />
 
-    <q-input
-      dense
-      outlined
-      v-model="form.local"
+    <InputFixed
+      :inputText="form.local"
+      @update="(e) => (form.local = e)"
       label="Local"
-      type="text"
-      :disable="form.localChecked"
-    />
-    <q-checkbox
-      dense
-      color="blue-grey"
-      class="text-blue-grey"
-      v-model="form.localChecked"
-      label="Fixar local"
     />
 
-    <q-input
-      dense
-      outlined
+    <InputFixed
+      :inputText="form.estado"
+      @update="(e) => (form.estado = e)"
       label="Estado"
-      v-model="form.estado"
-      type="text"
-      :disable="form.estadoChecked"
-    />
-    <q-checkbox
-      dense
-      color="blue-grey"
-      class="text-blue-grey"
-      v-model="form.estadoChecked"
-      label="Fixar estado"
     />
 
-    <q-input
-      v-model="form.obs"
-      type="text"
-      outlined
-      dense
-      class="col"
+    <InputFixed
+      :inputText="form.obs"
+      @update="(e) => (form.obs = e)"
       label="Observação"
-      :disable="form.obsChecked"
     />
-    <q-checkbox
-      dense
-      color="blue-grey"
-      v-model="form.obsChecked"
-      label="Observação"
-      class="text-blue-grey"
-    />
+
     <div class="row q-pa-md">
       <q-btn
         color="green-9"
@@ -148,7 +97,7 @@
   </q-form>
 
   <ShowTables
-    :tableData="data.selected"
+    :tableData="data.selected.reverse()"
     :headers="data.colunas"
     @removeRow="handleRemove"
   />
@@ -158,17 +107,13 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import Papa, { LocalChunkSize } from "papaparse";
 import ShowTables from "src/components/ShowTables.vue";
+import InputFixed from "src/components/InputFixed.vue";
 
 const form = ref({
-  npatChecked: false,
   npat: "",
-  descricaoChecked: false,
   descricao: "",
-  localChecked: false,
   local: "",
-  estadoChecked: false,
   estado: "",
-  obsChecked: false,
   obs: "",
   search1: "",
   search2: "",
@@ -226,24 +171,21 @@ const saveData = () => {
   }
 };
 
-const handleNpat = () => {
-  const value = data.values.find((e) => e.NRPATRIMONIO1 === form.value.npat);
-  if (value) {
-    try {
-      form.value.descricao = value.DESCRICAO;
-      form.value.local = value.LOCALIZAÇÃO;
-      form.value.estado = value.DESC_ESTADO;
-      form.value.obs = value.OBS;
-    } catch (error) {
-      error;
+const handleNpat = (npat) => {
+  if (npat) {
+    const value = data.values.find((e) => e.NRPATRIMONIO1 === npat);
+    if (value) {
+      console.log("Valores: ", value);
+      try {
+        form.value.descricao = value.DESCRICAO;
+        form.value.local = value.LOCALIZACAO;
+        form.value.estado = value.ESTADO;
+        form.value.obs = value.OBS;
+      } catch (error) {
+        error;
+      }
     }
-  } else {
-    form.value.descricao = "";
-    form.value.local = "";
-    form.value.estado = "";
-    form.value.obs = "";
   }
-  console.log("Valores: ", value);
 };
 
 const computedNpat = computed(() => {
@@ -299,7 +241,7 @@ const gerarTableTermo = () => {
   );
 };
 
-function gerarTable(data) {
+const gerarTable = (data) => {
   const tableHTML = `<table border="1" cellpadding="1" cellspacing="1" style="width:100%;" align="center"><thead><tr>${Object.keys(
     data[0]
   )
@@ -314,9 +256,9 @@ function gerarTable(data) {
     .join("")}</tbody></table>`;
   // navigator.clipboard.writeText(tableHTML);
   return tableHTML;
-}
+};
 
-function gerarTableFormate(data) {
+const gerarTableFormate = (data) => {
   const tableHTML = gerarTable(data);
   const tempElement = document.createElement("div");
   tempElement.innerHTML = tableHTML;
@@ -327,15 +269,21 @@ function gerarTableFormate(data) {
   window.getSelection().addRange(range);
   document.execCommand("copy");
   document.body.removeChild(tempElement);
-}
+};
 
 function limparTabela() {
   data.selected = [];
   saveData();
 }
 
-// Função para enviar o formulário (se necessário)
-function submitForm() {
+const resetForm = () => {
+  form.value.descricao = "";
+  form.value.local = "";
+  form.value.estado = "";
+  form.value.obs = "";
+};
+
+const submitForm = () => {
   const obj = Object.fromEntries(data.fields.map((key) => [key, ""]));
   obj.NRPATRIMONIO1 = form.value.npat;
   obj.DESCRICAO = form.value.descricao;
@@ -357,11 +305,8 @@ function submitForm() {
       data.selected.push(obj);
     }
   }
+  console.log("Dados form submit save: ", obj);
   saveData();
-}
-
-const handleEdit = (row, index) => {
-  alert(`Editar linha ${index + 1}: ${JSON.stringify(row)}`);
 };
 
 const handleRemove = (index) => {
