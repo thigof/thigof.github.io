@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="input-container">
     <q-input
       dense
       outlined
@@ -63,10 +63,14 @@ watch(
 </script>
 
 <style scoped>
-.lock {
+.input-container {
   position: relative;
-  top: -34px;
-  left: 320px;
-  font-size: 20px;
+
+  .lock {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 20px;
+  }
 }
 </style>

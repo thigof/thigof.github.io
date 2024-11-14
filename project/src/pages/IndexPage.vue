@@ -1,9 +1,13 @@
 <template>
   <q-form @submit.prevent="submitForm">
-    <fieldset>
-      <input type="file" accept=".csv" @change="handleFileUpload" />
-    </fieldset>
-    <p class="">Dados: {{ app?.values?.length }}</p>
+    <div class="q-pa-md row items-start q-gutter-md">
+      <router-link to="/settings">
+        <q-chip> {{ app?.values?.length }} registros </q-chip>
+      </router-link>
+      <router-link to="/">
+        <q-chip> {{ app?.selects?.length }} verifiados </q-chip>
+      </router-link>
+    </div>
 
     <InputFixed
       tipo="number"
