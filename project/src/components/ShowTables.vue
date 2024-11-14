@@ -36,8 +36,8 @@
 
     <div v-else class="card-grid">
       <div v-for="(row, index) in getDataTable()" :key="index" class="card">
-        <div v-for="(value, key) in row" :key="key">
-          <strong>{{ key }}:</strong> {{ value }}
+        <div v-for="{ field, label } in headers" :key="field">
+          <strong>{{ label }}:</strong> {{ row[field] }}
         </div>
         <div class="actions">
           <q-btn

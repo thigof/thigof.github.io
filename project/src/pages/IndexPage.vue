@@ -79,6 +79,7 @@
     @clicked="handleDbClickedTable"
     :reverse="true"
   />
+  Itens selecionados: {{ app.selects.length }}
 </template>
 
 <script setup>

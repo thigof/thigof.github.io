@@ -187,10 +187,10 @@ try {
   if (storedData) {
     const dt = JSON.parse(storedData);
     app.csv = dt.csv;
-    app.fields = dt.fields;
-    app.selects = dt.selects;
-    app.selected = dt.selected;
-    app.values = dt.values.map((e) => {
+    app.fields = dt.fields || [];
+    app.selects = dt.selects || [];
+    app.selected = dt.selected || {};
+    app.values = [...(dt.values || [])].map((e) => {
       if (!e.id) e.id = uuidv4();
       return e;
     });
