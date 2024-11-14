@@ -1,34 +1,39 @@
 <template>
-  {{ data.selected }}
   <q-form @submit.prevent="submitForm">
     <fieldset>
       <input type="file" accept=".csv" @change="handleFileUpload" />
     </fieldset>
-    <p class="">Dados: {{ data?.values?.length }}</p>
+    <p class="">Dados: {{ app?.values?.length }}</p>
 
     <InputFixed
       tipo="number"
       :textSelect="true"
       v-model="form.npat"
-      :label1="'NPAT ' + data.selected.SITUAÇÃO"
+      :label1="'NPAT ' + app.selected.SITUAÇÃO"
     />
 
-    <InputFixed v-model="data.selected.DESCRICAO" label1="Descrição" />
+    <InputFixed v-model="app.selected.DESCRICAO" label1="Descrição" />
 
-    <InputFixed v-model="data.selected.LOCALIZACAO" label1="Local" />
+    <InputFixed v-model="app.selected.LOCALIZACAO" label1="Local" />
 
-    <InputFixed v-model="data.selected.ESTADO" label1="Estado" />
+    <InputFixed v-model="app.selected.ESTADO" label1="Estado" />
 
-    <InputFixed v-model="data.selected.OBSERVAÇÃO" label1="Observação" />
+    <InputFixed v-model="app.selected.OBSERVAÇÃO" label1="Observação" />
 
-    <div class="row q-pa-md">
+    <div class="row q-gutter-md q-pa-md">
       <q-btn
         color="green-9"
-        class="q-mx-sm"
         type="button"
-        icon="add"
+        icon="send"
         label="Adicionar"
         @click="submitForm"
+      />
+      <q-btn
+        color="yellow-9"
+        type="button"
+        icon="close"
+        label="Cancelar"
+        @click="selectedReset"
       />
     </div>
     <div class="row justify-center items-center q-gutter-md q-pa-md">
@@ -38,7 +43,7 @@
         label="CSV"
         class="q-mx-sm"
         type="button"
-        @click="gerarCSV(data.selects)"
+        @click="gerarCSV(app.selects)"
       />
       <q-btn
         flat
@@ -68,9 +73,10 @@
   </q-form>
 
   <ShowTables
-    :tableData="data.selects"
-    :headers="data.colunas"
-    @removeRow="handleRemove"
+    :tableData="app.selects"
+    :headers="app.colunas"
+    @remove="handleRemoveTable"
+    @clicked="handleDbClickedTable"
     :reverse="true"
   />
 </template>
@@ -80,6 +86,8 @@ import { reactive, ref, watch } from "vue";
 import Papa from "papaparse";
 import ShowTables from "src/components/ShowTables.vue";
 import InputFixed from "src/components/InputFixed.vue";
+import { v4 as uuidv4 } from "uuid";
+import { app, saveItemSelected, selectedReset } from "src/boot/app";
 
 const form = ref({
   npat: "",
@@ -89,29 +97,6 @@ const form = ref({
   searchColumn: "",
 });
 
-const data = reactive({
-  values: null,
-  csv: "",
-  selected: {
-    NRPATRIMONIO1: "",
-    DESCRICAO: "",
-    LOCALIZACAO: "",
-    ESTADO: "",
-    OBSERVAÇÃO: "",
-    SITUAÇÃO: "",
-  },
-  selects: [],
-  fields: [],
-  colunas: [
-    { field: "NRPATRIMONIO1", label: "NPAT", align: "left" },
-    { field: "DESCRICAO", label: "Descrição", align: "left" },
-    { field: "LOCALIZACAO", label: "Local", align: "left" },
-    { field: "ESTADO", label: "Estado", align: "left" },
-    { field: "OBSERVAÇÃO", label: "Observação", align: "left" },
-    { field: "SITUAÇÃO", label: "Situação", align: "left" },
-  ],
-});
-
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -119,21 +104,21 @@ const handleFileUpload = (event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     const csvData = e.target.result;
-    data.csv = csvData;
+    app.csv = csvData;
     const result = Papa.parse(csvData, {
       header: true,
     });
-    data.values = result.data.map((e) =>
+    app.values = result.data.map((e) =>
       Object.keys(e).reduce(
         (acc, key) => {
           if (key.trim()) acc[key] = e[key];
           return acc;
         },
-        { SITUAÇÃO: "", OBSERVAÇÃO: "" }
+        { SITUAÇÃO: "", OBSERVAÇÃO: "", UPDATED: "" }
       )
     );
 
-    data.fields = result.meta.fields;
+    app.fields = result.meta.fields;
     saveData();
   };
   reader.readAsText(file);
@@ -141,7 +126,7 @@ const handleFileUpload = (event) => {
 
 const saveData = () => {
   try {
-    localStorage.setItem("data", JSON.stringify(data));
+    localStorage.setItem("data", JSON.stringify(app));
   } catch (error) {
     console.log("erro ao salvar: ", error);
   }
@@ -161,7 +146,7 @@ function gerarCSV(data, filename = "data.csv", separator = ";") {
 
 const gerarTableRelatorio = () => {
   gerarTableFormate(
-    data.selects.map((e) => ({
+    app.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Setor: e["NOME_SETOR"] || "",
       Local: e["LOCALIZACAO"] || "",
@@ -177,7 +162,7 @@ const gerarTableRelatorio = () => {
 
 const gerarTableTermo = () => {
   gerarTableFormate(
-    data.selects.map((e) => ({
+    app.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Descrição: e["DESCRICAO"] || "",
       Local: e["LOCALIZACAO"] || "",
@@ -223,31 +208,35 @@ const gerarTableFormate = (data) => {
 };
 
 function limparTabela() {
-  data.selects = [];
+  app.selects = [];
   saveData();
 }
 
-const resetForm = () => {
-  data.selected.NRPATRIMONIO1 = "";
-  data.selected.DESCRICAO = "";
-  data.selected.LOCALIZACAO = "";
-  data.selected.ESTADO = "";
-  data.selected.OBSERVAÇÃO = "";
-};
-
 const submitForm = () => {
-  const obj = Object.fromEntries(data.fields.map((key) => [key, ""]));
-  Object.assign(obj, JSON.parse(JSON.stringify(data.selected)));
-  data.selects.push(obj);
-  console.log("Dados form submit save: ", data.selects);
-  // form.value.npat = "";
-  // resetForm();
-  // saveData();
+  saveItemSelected();
+  form.value.npat = "";
+  selectedReset();
+  saveData();
 };
 
-const handleRemove = (index) => {
+const handleDbClickedTable = (index) => {
+  const item = app.selects[index];
+  if (item) {
+    form.value.npat = item.NRPATRIMONIO1;
+    setTimeout(() => {
+      app.selected.id = item.id;
+      app.selected.NRPATRIMONIO1 = item.NRPATRIMONIO1;
+      app.selected.DESCRICAO = item.DESCRICAO || "";
+      app.selected.LOCALIZACAO = item.LOCALIZACAO || "";
+      app.selected.ESTADO = item.ESTADO || "";
+      app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
+    }, 1000);
+  }
+};
+
+const handleRemoveTable = (index) => {
   if (index > -1) {
-    data.selects.splice(index, 1);
+    app.selects.splice(index, 1);
   }
   saveData();
 };
@@ -256,27 +245,29 @@ watch(
   () => form.value.npat,
   () => {
     try {
-      const item = data.values?.find(
+      const item = app.values?.find(
         (e) => e.NRPATRIMONIO1 === String(form.value.npat)
       );
-      resetForm();
+      selectedReset();
       if (item) {
-        data.selected.NRPATRIMONIO1 = form.value.npat;
-        data.selected.DESCRICAO = item.DESCRICAO || "";
-        data.selected.LOCALIZACAO = item.LOCALIZACAO || "";
-        data.selected.ESTADO = item.ESTADO || "";
-        data.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
+        console.log("Item::: ", item);
+        app.selected.id = item.id || uuidv4();
+        app.selected.NRPATRIMONIO1 = form.value.npat;
+        app.selected.DESCRICAO = item.DESCRICAO || "";
+        app.selected.LOCALIZACAO = item.LOCALIZACAO || "";
+        app.selected.ESTADO = item.ESTADO || "";
+        app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
       }
       if (!form.value.npat) {
-        data.selected.SITUAÇÃO = "SEM PLACA";
+        app.selected.SITUAÇÃO = "SEM PLACA";
       } else if (item) {
-        data.selected.SITUAÇÃO = "";
+        app.selected.SITUAÇÃO = "REGULAR";
       } else {
-        data.selected.SITUAÇÃO = "SEM REGISTRO";
+        app.selected.SITUAÇÃO = "SEM REGISTRO";
       }
     } catch (_error) {
       console.log("npat: ", _error);
-      resetForm();
+      selectedReset();
     }
   },
   { immediate: true }
@@ -284,14 +275,6 @@ watch(
 
 try {
   form.value.npat = null;
-  const storedData = localStorage.getItem("data");
-  if (storedData) {
-    const dt = JSON.parse(storedData);
-    data.csv = dt.csv;
-    data.fields = dt.fields;
-    // data.selected = dt.selected;
-    data.values = dt.values;
-  }
 } catch (error) {
   console.log("Erro ao carregar dados localStorage: ", error);
 }
