@@ -17,7 +17,7 @@
         <tr
           v-for="(row, index) in getDataTable()"
           :key="index"
-          @dblclick="dblclick(index)"
+          @click="click(index)"
         >
           <td v-for="header in headers" :key="header.field">
             {{ row[header.field] }}
@@ -35,7 +35,12 @@
     </table>
 
     <div v-else class="card-grid">
-      <div v-for="(row, index) in getDataTable()" :key="index" class="card">
+      <div
+        v-for="(row, index) in getDataTable()"
+        :key="index"
+        class="card"
+        @click="click(index)"
+      >
         <div v-for="{ field, label } in headers" :key="field">
           <strong>{{ label }}:</strong> {{ row[field] }}
         </div>
@@ -78,9 +83,10 @@ const getDataTable = () => {
   return props.reverse ? [...props.tableData].reverse() : props.tableData;
 };
 
-const dblclick = (row) => {
-  const adjustedIndex = props.reverse ? props.tableData.length - 1 - row : row;
-  emit("clicked", adjustedIndex);
+const click = (row) => {
+  const index =
+    props.reverse || !isMobile.value ? props.tableData.length - 1 - row : row;
+  emit("clicked", index);
 };
 
 const remove = (row) => {

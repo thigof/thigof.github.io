@@ -20,55 +20,68 @@
 
     <InputFixed v-model="app.selected.OBSERVAÇÃO" label1="Observação" />
 
-    <div class="row q-gutter-md q-pa-md">
-      <q-btn
-        color="green-9"
-        type="button"
-        icon="send"
-        label="Adicionar"
-        @click="submitForm"
-      />
-      <q-btn
-        color="yellow-9"
-        type="button"
-        icon="close"
-        label="Cancelar"
-        @click="selectedReset"
-      />
+    <div class="row justify-center q-mt-sm">
+      <div class="col">
+        <q-btn
+          color="green-9"
+          type="button"
+          icon="send"
+          label="Salvar"
+          @click="submitForm"
+        />
+      </div>
+      <div class="col">
+        <q-btn
+          color="yellow-9"
+          type="button"
+          icon="close"
+          label="Cancelar"
+          v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZACAO"
+          @click="selectedReset"
+        />
+      </div>
     </div>
-    <div class="row justify-center items-center q-gutter-md q-pa-md">
-      <q-btn
-        flat
-        icon="description"
-        label="CSV"
-        class="q-mx-sm"
-        type="button"
-        @click="gerarCSV(app.selects)"
-      />
-      <q-btn
-        flat
-        icon="code"
-        label="Relatório"
-        class="q-mx-sm"
-        type="button"
-        @click.prevent="gerarTableRelatorio"
-      />
-      <q-btn
-        flat
-        icon="code"
-        label="Termo"
-        class="q-mx-sm"
-        type="button"
-        @click="gerarTableTermo"
-      />
-      <q-btn
-        flat
-        icon="clear"
-        label="Limpar"
-        class="q-mx-sm"
-        type="button"
-        @click="limparTabela"
-      />
+
+    <div class="row center q-mt-lg">
+      <div class="col">
+        <q-btn
+          flat
+          class="col-2 col-sm-6"
+          icon="description"
+          label="CSV"
+          type="button"
+          @click="gerarCSV(app.selects)"
+        />
+      </div>
+      <div class="col">
+        <q-btn
+          flat
+          class="col-2 col-sm-2"
+          icon="code"
+          label="Relatório"
+          @click.prevent="gerarTableRelatorio"
+        />
+      </div>
+      <div class="col">
+        <q-btn
+          flat
+          class="col-3 col-sm-4"
+          icon="code"
+          label="Termo"
+          type="button"
+          @click="gerarTableTermo"
+        />
+      </div>
+      <div class="col">
+        <q-btn
+          flat
+          class="col-3 col-sm-4"
+          icon="clear"
+          label="Limpar"
+          type="button"
+          @click="limparTabela"
+        />
+      </div>
     </div>
   </q-form>
 
@@ -76,7 +89,7 @@
     :tableData="app.selects"
     :headers="app.colunas"
     @remove="handleRemoveTable"
-    @clicked="handleDbClickedTable"
+    @clicked="handleClickedTable"
     :reverse="true"
   />
   Itens selecionados: {{ app.selects.length }}
@@ -114,7 +127,7 @@ const submitForm = () => {
   saveData();
 };
 
-const handleDbClickedTable = (index) => {
+const handleClickedTable = (index) => {
   const item = app.selects[index];
   if (item) {
     form.value.npat = item.NRPATRIMONIO1;

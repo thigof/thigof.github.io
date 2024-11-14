@@ -1,20 +1,20 @@
 <template>
-  <q-input
-    dense
-    outlined
-    v-model="data.modelValue"
-    :label="label1"
-    :type="tipo"
-    :disable="data.checked"
-    @focus="isSelectAllText"
-  />
-  <q-checkbox
-    dense
-    color="blue-grey"
-    class="text-blue-grey"
-    v-model="data.checked"
-    :label="label2"
-  />
+  <div>
+    <q-input
+      dense
+      outlined
+      v-model="data.modelValue"
+      :label="label1"
+      :type="tipo"
+      :disable="data.checked"
+      @focus="isSelectAllText"
+    />
+    <i
+      class="lock"
+      @click="data.checked = !data.checked"
+      :class="data.checked ? 'mdi mdi-lock' : 'mdi mdi-lock-open-outline'"
+    ></i>
+  </div>
 </template>
 
 <script setup>
@@ -61,3 +61,12 @@ watch(
   { immediate: true }
 );
 </script>
+
+<style scoped>
+.lock {
+  position: relative;
+  top: -34px;
+  left: 320px;
+  font-size: 20px;
+}
+</style>
