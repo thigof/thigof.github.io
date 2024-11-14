@@ -15,7 +15,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="(row, index) in tableData"
+          v-for="(row, index) in getDataTable()"
           :key="index"
           @click="handleRowClick(row)"
         >
@@ -35,7 +35,7 @@
     </table>
 
     <div v-else class="card-grid">
-      <div v-for="(row, index) in tableData" :key="index" class="card">
+      <div v-for="(row, index) in getDataTable()" :key="index" class="card">
         <div v-for="(value, key) in row" :key="key">
           <strong>{{ key }}:</strong> {{ value }}
         </div>
@@ -65,10 +65,18 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  reverse: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emit = defineEmits(["removeRow"]);
 
 const isMobile = computed(() => window.innerWidth < 600);
+
+const getDataTable = () => {
+  return props.reverse ? [...props.tableData].reverse() : props.tableData;
+};
 
 const handleRowClick = (row) => {
   console.log("Row clicked:", row);

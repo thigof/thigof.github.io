@@ -1,54 +1,25 @@
 <template>
+  {{ data.selected }}
   <q-form @submit.prevent="submitForm">
     <fieldset>
       <input type="file" accept=".csv" @change="handleFileUpload" />
     </fieldset>
     <p class="">Dados: {{ data?.values?.length }}</p>
 
-    <div class="row items-center q-gutter-md" style="height: 100%">
-      <InputFixed
-        inputType="number"
-        :inputText="form.npat"
-        :selectAllText="true"
-        @update="(e) => handleNpat(e)"
-        :label="
-          computedNpat ? 'NPAT' : form.npat.length ? 'Não encontrado' : 'NPAT'
-        "
-      />
-      <q-btn
-        dense
-        @click.prevent="handleNpat"
-        :disabled="computedNpat"
-        size="btn_size_round_md"
-        color="primary"
-        label="Pesquisar"
-        class="col-shrink"
-      />
-    </div>
-
     <InputFixed
-      :inputText="form.descricao"
-      @update="(e) => (form.descricao = e)"
-      label="Descrição"
+      tipo="number"
+      :textSelect="true"
+      v-model="form.npat"
+      :label1="'NPAT ' + data.selected.SITUAÇÃO"
     />
 
-    <InputFixed
-      :inputText="form.local"
-      @update="(e) => (form.local = e)"
-      label="Local"
-    />
+    <InputFixed v-model="data.selected.DESCRICAO" label1="Descrição" />
 
-    <InputFixed
-      :inputText="form.estado"
-      @update="(e) => (form.estado = e)"
-      label="Estado"
-    />
+    <InputFixed v-model="data.selected.LOCALIZACAO" label1="Local" />
 
-    <InputFixed
-      :inputText="form.obs"
-      @update="(e) => (form.obs = e)"
-      label="Observação"
-    />
+    <InputFixed v-model="data.selected.ESTADO" label1="Estado" />
+
+    <InputFixed v-model="data.selected.OBSERVAÇÃO" label1="Observação" />
 
     <div class="row q-pa-md">
       <q-btn
@@ -67,7 +38,7 @@
         label="CSV"
         class="q-mx-sm"
         type="button"
-        @click="gerarCSV(data.selected)"
+        @click="gerarCSV(data.selects)"
       />
       <q-btn
         flat
@@ -97,34 +68,39 @@
   </q-form>
 
   <ShowTables
-    :tableData="data.selected.reverse()"
+    :tableData="data.selects"
     :headers="data.colunas"
     @removeRow="handleRemove"
+    :reverse="true"
   />
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
-import Papa, { LocalChunkSize } from "papaparse";
+import { reactive, ref, watch } from "vue";
+import Papa from "papaparse";
 import ShowTables from "src/components/ShowTables.vue";
 import InputFixed from "src/components/InputFixed.vue";
 
 const form = ref({
   npat: "",
-  descricao: "",
-  local: "",
-  estado: "",
-  obs: "",
   search1: "",
   search2: "",
-  searchSelected: "",
+  searchSelecteds: "",
   searchColumn: "",
 });
 
 const data = reactive({
   values: null,
   csv: "",
-  selected: [],
+  selected: {
+    NRPATRIMONIO1: "",
+    DESCRICAO: "",
+    LOCALIZACAO: "",
+    ESTADO: "",
+    OBSERVAÇÃO: "",
+    SITUAÇÃO: "",
+  },
+  selects: [],
   fields: [],
   colunas: [
     { field: "NRPATRIMONIO1", label: "NPAT", align: "left" },
@@ -171,31 +147,6 @@ const saveData = () => {
   }
 };
 
-const handleNpat = (npat) => {
-  if (npat) {
-    const value = data.values.find((e) => e.NRPATRIMONIO1 === npat);
-    if (value) {
-      console.log("Valores: ", value);
-      try {
-        form.value.descricao = value.DESCRICAO;
-        form.value.local = value.LOCALIZACAO;
-        form.value.estado = value.ESTADO;
-        form.value.obs = value.OBS;
-      } catch (error) {
-        error;
-      }
-    }
-  }
-};
-
-const computedNpat = computed(() => {
-  if (data?.values && form?.value.npat) {
-    return data?.values?.find((e) => e.NRPATRIMONIO1 === form.value.npat);
-  } else {
-    return false;
-  }
-});
-
 function gerarCSV(data, filename = "data.csv", separator = ";") {
   const csv = [
     Object.keys(data[0]).join(separator),
@@ -210,7 +161,7 @@ function gerarCSV(data, filename = "data.csv", separator = ";") {
 
 const gerarTableRelatorio = () => {
   gerarTableFormate(
-    data.selected.map((e) => ({
+    data.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Setor: e["NOME_SETOR"] || "",
       Local: e["LOCALIZACAO"] || "",
@@ -226,7 +177,7 @@ const gerarTableRelatorio = () => {
 
 const gerarTableTermo = () => {
   gerarTableFormate(
-    data.selected.map((e) => ({
+    data.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Descrição: e["DESCRICAO"] || "",
       Local: e["LOCALIZACAO"] || "",
@@ -254,7 +205,7 @@ const gerarTable = (data) => {
           .join("")}</tr>`
     )
     .join("")}</tbody></table>`;
-  // navigator.clipboard.writeText(tableHTML);
+  navigator.clipboard.writeText(tableHTML);
   return tableHTML;
 };
 
@@ -272,64 +223,78 @@ const gerarTableFormate = (data) => {
 };
 
 function limparTabela() {
-  data.selected = [];
+  data.selects = [];
   saveData();
 }
 
 const resetForm = () => {
-  form.value.descricao = "";
-  form.value.local = "";
-  form.value.estado = "";
-  form.value.obs = "";
+  data.selected.NRPATRIMONIO1 = "";
+  data.selected.DESCRICAO = "";
+  data.selected.LOCALIZACAO = "";
+  data.selected.ESTADO = "";
+  data.selected.OBSERVAÇÃO = "";
 };
 
 const submitForm = () => {
   const obj = Object.fromEntries(data.fields.map((key) => [key, ""]));
-  obj.NRPATRIMONIO1 = form.value.npat;
-  obj.DESCRICAO = form.value.descricao;
-  obj.LOCALIZACAO = form.value.local;
-  obj.ESTADO = form.value.estado;
-  obj.OBSERVAÇÃO = form.value.obs;
-
-  if (!form.value.npat || form.value.npat === "0") {
-    obj.SITUAÇÃO = "SEM PLACA";
-    data.selected.push(obj);
-  } else {
-    const item = data?.values?.find((e) => e.NRPATRIMONIO1 === form.value.npat);
-    if (item) {
-      console.log("Adicionar: ", item);
-      Object.assign(item, obj, { SITUAÇÃO: "REGULAR" });
-      data.selected.push(item);
-    } else {
-      obj.SITUAÇÃO = "SEM REGISTRO";
-      data.selected.push(obj);
-    }
-  }
-  console.log("Dados form submit save: ", obj);
-  saveData();
+  Object.assign(obj, JSON.parse(JSON.stringify(data.selected)));
+  data.selects.push(obj);
+  console.log("Dados form submit save: ", data.selects);
+  // form.value.npat = "";
+  // resetForm();
+  // saveData();
 };
 
 const handleRemove = (index) => {
   if (index > -1) {
-    data.selected.splice(index, 1);
+    data.selects.splice(index, 1);
   }
   saveData();
 };
 
+watch(
+  () => form.value.npat,
+  () => {
+    try {
+      const item = data.values?.find(
+        (e) => e.NRPATRIMONIO1 === String(form.value.npat)
+      );
+      resetForm();
+      if (item) {
+        data.selected.NRPATRIMONIO1 = form.value.npat;
+        data.selected.DESCRICAO = item.DESCRICAO || "";
+        data.selected.LOCALIZACAO = item.LOCALIZACAO || "";
+        data.selected.ESTADO = item.ESTADO || "";
+        data.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
+      }
+      if (!form.value.npat) {
+        data.selected.SITUAÇÃO = "SEM PLACA";
+      } else if (item) {
+        data.selected.SITUAÇÃO = "";
+      } else {
+        data.selected.SITUAÇÃO = "SEM REGISTRO";
+      }
+    } catch (_error) {
+      console.log("npat: ", _error);
+      resetForm();
+    }
+  },
+  { immediate: true }
+);
+
 try {
+  form.value.npat = null;
   const storedData = localStorage.getItem("data");
   if (storedData) {
     const dt = JSON.parse(storedData);
     data.csv = dt.csv;
     data.fields = dt.fields;
-    data.selected = dt.selected;
+    // data.selected = dt.selected;
     data.values = dt.values;
   }
 } catch (error) {
   console.log("Erro ao carregar dados localStorage: ", error);
 }
-
-onMounted(() => {});
 </script>
 
 <style scoped lang="scss">
