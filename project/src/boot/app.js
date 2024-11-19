@@ -45,7 +45,11 @@ export const saveItemSelected = () => {
   Object.assign(item, JSON.parse(JSON.stringify(app.selected)));
   item.UPDATED = new Date();
   if (item.id) {
-    app.selects = app.selects.filter((e) => e.id !== item.id);
+    app.selects = app.selects.filter(
+      (e) =>
+        e.id !== item.id ||
+        (e.NRPATRIMONIO1 && e.NRPATRIMONIO1 !== item.NRPATRIMONIO1)
+    );
   }
   app.selects.push(item);
   return true;
