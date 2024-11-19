@@ -2,7 +2,7 @@
   <q-form @submit.prevent="submitForm">
     <div class="q-pa-md row items-start q-gutter-md">
       <router-link to="/settings">
-        <q-chip> {{ app?.values?.length }} registros </q-chip>
+        <q-chip> {{ app?.values?.length || 0 }} registros </q-chip>
       </router-link>
       <router-link to="/">
         <q-chip> {{ app?.selects?.length }} verificados </q-chip>

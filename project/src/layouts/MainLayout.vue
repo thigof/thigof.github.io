@@ -16,6 +16,9 @@
             <q-item to="/settings" clickable v-close-popup>
               <q-item-section>Configurações</q-item-section>
             </q-item>
+            <q-item @click="restore" clickable v-close-popup>
+              <q-item-section>Restaurar</q-item-section>
+            </q-item>
           </q-list>
         </q-menu>
       </q-btn>
@@ -26,6 +29,20 @@
   </q-layout>
 </template>
 
-<script setup></script>
+<script setup>
+const restore = () => {
+  Dialog.create({
+    title: "Restaurar aplicação",
+    message: "Deseja apagar todos os registros e definir de fabrica?",
+    ok: "Confirmar",
+    cancel: "Cancelar",
+    persistent: true,
+  }).onOk(() => {
+    console.log("Apagado...");
+    localStorage.clear();
+    window.location.reload();
+  });
+};
+</script>
 
 <style scope></style>
