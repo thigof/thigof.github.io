@@ -165,13 +165,13 @@ watch(
   () => form.value.npat,
   () => {
     try {
+      selectedReset();
+      app.selected.NRPATRIMONIO1 = form.value.npat;
       const item = app.values?.find(
         (e) => e.NRPATRIMONIO1 === String(form.value.npat)
       );
-      selectedReset();
       if (item) {
         app.selected.id = item.id || uuidv4();
-        app.selected.NRPATRIMONIO1 = form.value.npat;
         app.selected.DESCRICAO = item.DESCRICAO || "";
         app.selected.LOCALIZACAO = item.LOCALIZACAO || "";
         app.selected.ESTADO = item.ESTADO || "";
@@ -184,6 +184,7 @@ watch(
       } else {
         app.selected.SITUAÇÃO = "SEM REGISTRO";
       }
+      console.log("Npag::: ", form.value.npat);
     } catch (_error) {
       console.log("npat: ", _error);
       selectedReset();
