@@ -34,8 +34,9 @@ import { Dialog } from "quasar";
 
 const restore = () => {
   Dialog.create({
-    title: "Restaurar aplicação",
-    message: "Deseja apagar todos os registros e definir de fabrica?",
+    title: "Restaurar a Aplicação",
+    message:
+      "Você tem certeza de que deseja apagar todos os registros e restaurar as configurações de fábrica?",
     ok: "Confirmar",
     cancel: "Cancelar",
     persistent: true,
