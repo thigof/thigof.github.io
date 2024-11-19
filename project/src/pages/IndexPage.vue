@@ -184,7 +184,6 @@ watch(
       } else {
         app.selected.SITUAÇÃO = "SEM REGISTRO";
       }
-      console.log("Npag::: ", form.value.npat);
     } catch (_error) {
       console.log("npat: ", _error);
       selectedReset();
