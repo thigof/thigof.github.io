@@ -3,7 +3,7 @@
     <fieldset>
       <input
         type="file"
-        @change="handleFileUpload"
+        @change="handleFile"
         label="Selecionar banco de dados csv"
         accept=".xls, .csv"
       />
@@ -13,4 +13,12 @@
 
 <script setup>
 import { handleFileUpload } from "src/boot/app";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const handleFile = (event) => {
+  handleFileUpload(event);
+  router.push("/");
+};
 </script>
