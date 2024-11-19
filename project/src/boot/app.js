@@ -10,7 +10,7 @@ export const app = reactive({
     id: uuidv4(),
     NRPATRIMONIO1: "",
     DESCRICAO: "",
-    LOCALIZACAO: "",
+    LOCALIZAÇÃO: "",
     ESTADO: "",
     OBSERVAÇÃO: "",
     SITUAÇÃO: "",
@@ -21,7 +21,7 @@ export const app = reactive({
   colunas: [
     { field: "NRPATRIMONIO1", label: "NPAT", align: "left" },
     { field: "DESCRICAO", label: "Descrição", align: "left" },
-    { field: "LOCALIZACAO", label: "Local", align: "left" },
+    { field: "LOCALIZAÇÃO", label: "Local", align: "left" },
     { field: "ESTADO", label: "Estado", align: "left" },
     { field: "OBSERVAÇÃO", label: "Observação", align: "left" },
     { field: "SITUAÇÃO", label: "Situação", align: "left" },
@@ -34,7 +34,7 @@ export const selectedReset = () => {
   app.selected.id = uuidv4();
   app.selected.NRPATRIMONIO1 = "";
   app.selected.DESCRICAO = "";
-  app.selected.LOCALIZACAO = "";
+  app.selected.LOCALIZAÇÃO = "";
   app.selected.ESTADO = "";
   app.selected.OBSERVAÇÃO = "";
   app.selected.UPDATED = "";
@@ -103,7 +103,7 @@ export const gerarTableRelatorio = () => {
     app.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Setor: e["NOME_SETOR"] || "",
-      Local: e["LOCALIZACAO"] || "",
+      Local: e["LOCALIZAÇÃO"] || "",
       Valor:
         Number(e["VALOR"]).toLocaleString("pt-BR", {
           style: "currency",
@@ -119,7 +119,7 @@ export const gerarTableTermo = () => {
     app.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Descrição: e["DESCRICAO"] || "",
-      Local: e["LOCALIZACAO"] || "",
+      Local: e["LOCALIZAÇÃO"] || "",
       Setor: e["NOME_SETOR"],
       Estado: e["DESC_ESTADO"] || "",
       Valor:

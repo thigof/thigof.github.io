@@ -18,7 +18,7 @@
 
     <InputFixed v-model="app.selected.DESCRICAO" label1="Descrição" />
 
-    <InputFixed v-model="app.selected.LOCALIZACAO" label1="Local" />
+    <InputFixed v-model="app.selected.LOCALIZAÇÃO" label1="Local" />
 
     <InputFixed v-model="app.selected.ESTADO" label1="Estado" />
 
@@ -40,7 +40,7 @@
           type="button"
           icon="close"
           label="Cancelar"
-          v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZACAO"
+          v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZAÇÃO"
           @click="clearForm"
         />
       </div>
@@ -143,7 +143,7 @@ const handleClickedTable = (index) => {
       app.selected.id = item.id;
       app.selected.NRPATRIMONIO1 = item.NRPATRIMONIO1;
       app.selected.DESCRICAO = item.DESCRICAO || "";
-      app.selected.LOCALIZACAO = item.LOCALIZACAO || "";
+      app.selected.LOCALIZAÇÃO = item.LOCALIZAÇÃO || "";
       app.selected.ESTADO = item.ESTADO || "";
       app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
     }, 1000);
@@ -173,7 +173,7 @@ watch(
       if (item) {
         app.selected.id = item.id || uuidv4();
         app.selected.DESCRICAO = item.DESCRICAO || "";
-        app.selected.LOCALIZACAO = item.LOCALIZACAO || "";
+        app.selected.LOCALIZAÇÃO = item.LOCALIZAÇÃO || "";
         app.selected.ESTADO = item.ESTADO || "";
         app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
       }
