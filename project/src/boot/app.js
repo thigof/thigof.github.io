@@ -48,7 +48,7 @@ export const saveItemSelected = () => {
     app.selects = app.selects.filter(
       (e) =>
         e.id !== item.id ||
-        (e.NRPATRIMONIO1 && e.NRPATRIMONIO1 !== item.NRPATRIMONIO1)
+        (item.NRPATRIMONIO1 && e.NRPATRIMONIO1 !== item.NRPATRIMONIO1)
     );
   }
   app.selects.push(item);

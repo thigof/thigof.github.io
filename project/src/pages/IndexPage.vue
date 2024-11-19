@@ -136,7 +136,6 @@ const submitForm = () => {
 };
 
 const handleClickedTable = (row) => {
-  console.log("row: ", row);
   const item = app.selects.find((e) => e.id === row.id);
   if (item) {
     form.value.npat = item.NRPATRIMONIO1;
