@@ -5,7 +5,7 @@
         <q-chip> {{ app?.values?.length }} registros </q-chip>
       </router-link>
       <router-link to="/">
-        <q-chip> {{ app?.selects?.length }} verifiados </q-chip>
+        <q-chip> {{ app?.selects?.length }} verificados </q-chip>
       </router-link>
     </div>
 
@@ -13,7 +13,7 @@
       tipo="number"
       :textSelect="true"
       v-model="form.npat"
-      :label1="'NPAT ' + app.selected.SITUAÇÃO"
+      :label1="'NPAT ' + getLabelNpat"
     />
 
     <InputFixed v-model="app.selected.DESCRICAO" label1="Descrição" />
@@ -24,8 +24,8 @@
 
     <InputFixed v-model="app.selected.OBSERVAÇÃO" label1="Observação" />
 
-    <div class="row justify-center q-mt-sm">
-      <div class="col">
+    <div class="row q-mt-sm q-gutter-md">
+      <div class="">
         <q-btn
           color="green-9"
           type="button"
@@ -34,14 +34,14 @@
           @click="submitForm"
         />
       </div>
-      <div class="col">
+      <div class="">
         <q-btn
           color="yellow-9"
           type="button"
           icon="close"
           label="Cancelar"
           v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZACAO"
-          @click="selectedReset"
+          @click="clearForm"
         />
       </div>
     </div>
@@ -76,7 +76,7 @@
           @click="gerarTableTermo"
         />
       </div>
-      <div class="col">
+      <div class="col" v-show="app.selects?.length">
         <q-btn
           flat
           class="col-3 col-sm-4"
@@ -100,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import ShowTables from "src/components/ShowTables.vue";
 import InputFixed from "src/components/InputFixed.vue";
 import { v4 as uuidv4 } from "uuid";
@@ -109,7 +109,6 @@ import {
   gerarCSV,
   gerarTableRelatorio,
   gerarTableTermo,
-  handleFileUpload,
   limparTabela,
   saveData,
   saveItemSelected,
@@ -123,6 +122,11 @@ const form = ref({
   searchSelecteds: "",
   searchColumn: "",
 });
+
+const clearForm = () => {
+  selectedReset();
+  form.value.npat = "";
+};
 
 const submitForm = () => {
   saveItemSelected();
@@ -153,6 +157,10 @@ const handleRemoveTable = (index) => {
   saveData();
 };
 
+const getLabelNpat = computed(() =>
+  ["SEM PLACA"].includes(app.selected.SITUAÇÃO) ? "" : app.selected.SITUAÇÃO
+);
+
 watch(
   () => form.value.npat,
   () => {
@@ -162,7 +170,6 @@ watch(
       );
       selectedReset();
       if (item) {
-        console.log("Item::: ", item);
         app.selected.id = item.id || uuidv4();
         app.selected.NRPATRIMONIO1 = form.value.npat;
         app.selected.DESCRICAO = item.DESCRICAO || "";
