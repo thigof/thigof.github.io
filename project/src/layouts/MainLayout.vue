@@ -30,6 +30,8 @@
 </template>
 
 <script setup>
+import { Dialog } from "quasar";
+
 const restore = () => {
   Dialog.create({
     title: "Restaurar aplicação",
