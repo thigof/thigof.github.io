@@ -135,8 +135,9 @@ const submitForm = () => {
   saveData();
 };
 
-const handleClickedTable = (index) => {
-  const item = app.selects[index];
+const handleClickedTable = (row) => {
+  console.log("row: ", row);
+  const item = app.selects.find((e) => e.id === row.id);
   if (item) {
     form.value.npat = item.NRPATRIMONIO1;
     setTimeout(() => {
@@ -151,9 +152,7 @@ const handleClickedTable = (index) => {
 };
 
 const handleRemoveTable = (index) => {
-  if (index > -1) {
-    app.selects.splice(index, 1);
-  }
+  app.selects = app.selects.filter((e) => e.id !== index.id);
   saveData();
 };
 

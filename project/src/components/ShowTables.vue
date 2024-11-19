@@ -17,7 +17,7 @@
         <tr
           v-for="(row, index) in getDataTable()"
           :key="index"
-          @click="click(index)"
+          @click="click(row)"
         >
           <td v-for="header in headers" :key="header.field">
             {{ row[header.field] }}
@@ -26,7 +26,7 @@
             <q-btn
               icon="delete"
               color="negative"
-              @click.stop="remove(index)"
+              @click.stop="remove(row)"
               size="sm"
             />
           </td>
@@ -39,7 +39,7 @@
         v-for="(row, index) in getDataTable()"
         :key="index"
         class="card"
-        @click="click(index)"
+        @click="click(row)"
       >
         <div v-for="{ field, label } in headers" :key="field">
           <strong>{{ label }}:</strong> {{ row[field] }}
@@ -48,7 +48,7 @@
           <q-btn
             icon="delete"
             color="negative"
-            @click.stop="remove(index)"
+            @click.stop="remove(row)"
             size="sm"
           />
         </div>
@@ -58,7 +58,6 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
 import { QBtn } from "quasar";
 
 const props = defineProps({
@@ -70,23 +69,17 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  reverse: {
-    type: Boolean,
-    default: false,
-  },
 });
 const emit = defineEmits(["remove", "clicked"]);
 
-const isMobile = computed(() => window.innerWidth < 600);
+const isMobile = window.innerWidth < 600;
 
 const getDataTable = () => {
-  return props.reverse ? [...props.tableData].reverse() : props.tableData;
+  return [...props.tableData].reverse() || [];
 };
 
 const click = (row) => {
-  const index =
-    props.reverse || !isMobile.value ? props.tableData.length - 1 - row : row;
-  emit("clicked", index);
+  emit("clicked", row);
 };
 
 const remove = (row) => {
