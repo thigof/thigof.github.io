@@ -172,7 +172,7 @@ watch(
         app.selected.id = item.id || uuidv4();
         app.selected.DESCRICAO = item.DESCRICAO || "";
         app.selected.LOCALIZAÇÃO = item.LOCALIZAÇÃO || "";
-        app.selected.ESTADO = item.ESTADO || "";
+        app.selected.ESTADO = item.DESC_ESTADO || "";
         app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
       }
       if (!form.value.npat) {
