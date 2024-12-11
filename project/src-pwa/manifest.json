@@ -1,7 +1,11 @@
 {
+  "name": "Aplicativo Patrimonial IFG",
+  "short_name": "Patrimônio IFG",
+  "description": "Gerencie e visualize informações patrimoniaisI.",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#027be3",
+  "theme_color": "#00420c",
   "icons": [
     {
       "src": "icons/icon-128x128.png",
