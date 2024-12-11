@@ -88,7 +88,6 @@
       </div>
     </div>
   </q-form>
-
   <ShowTables
     :tableData="app.selects"
     :headers="app.colunas"

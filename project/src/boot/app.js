@@ -43,7 +43,17 @@ export const selectedReset = () => {
 export const saveItemSelected = () => {
   const item = Object.fromEntries(app.fields.map((key) => [key, ""]));
   Object.assign(item, JSON.parse(JSON.stringify(app.selected)));
+
   item.UPDATED = new Date();
+
+  // Item inserido
+  const isItemInserted =
+    app.selected.NRPATRIMONIO1 &&
+    !!app.selects.find((e) => e.NRPATRIMONIO1 === app.selected.NRPATRIMONIO1);
+  if (isItemInserted || !item.INSERTED) {
+    item.INSERTED = new Date();
+  }
+
   if (item.id) {
     app.selects = app.selects.filter(
       (e) =>
@@ -192,7 +202,13 @@ try {
     const dt = JSON.parse(storedData);
     app.csv = dt.csv;
     app.fields = dt.fields || [];
-    app.selects = dt.selects || [];
+    app.selects =
+      dt.selects.map((e) => {
+        if (!e.INSERTED) {
+          e.INSERTED = new Date();
+        }
+        return e;
+      }) || [];
     app.selected = dt.selected || {};
     app.values = [...(dt.values || [])].map((e) => {
       if (!e.id) e.id = uuidv4();
