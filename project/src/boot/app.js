@@ -100,11 +100,13 @@ export const saveData = () => {
   }
 };
 
-export function gerarCSV(data, filename = "data.csv", separator = ";") {
-  const csv = [
-    Object.keys(data[0]).join(separator),
-    ...data.map((row) => Object.values(row).join(separator)),
-  ].join("\n");
+export function gerarCSV(data, filename = "data.csv", separator = "\t") {
+  const headers = Object.keys(data[0]);
+  const values = JSON.parse(JSON.stringify(data))
+    .map((e) => Object.values(e))
+    .map((e) => e.join(separator));
+
+  const csv = [headers.join(separator), ...values].join("\n");
   const link = Object.assign(document.createElement("a"), {
     href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
     download: filename,
