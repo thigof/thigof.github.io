@@ -119,12 +119,31 @@ export function gerarCSV(data, filename = "data", separator = "\t") {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.csv`;
 
-    const headers = Object.keys(data[0]);
-    const values = JSON.parse(JSON.stringify(data))
-      .map((e) => Object.values(e))
-      .map((e) => e.join(separator));
+    const headers = [
+      "SEQ",
+      "NRPATRIMONIO1",
+      "DESCRICAO",
+      "CODCLASSIFICACAO",
+      "NOME_SETOR",
+      "LOCALIZAÇÃO",
+      "VALOR",
+      "DATACADASTRO",
+      "DESC_ESTADO",
+      "NRNOTAFISCAL",
+      "NOMEUNIDADE",
+      "ESTADO",
+      "OBSERVAÇÃO",
+      "SITUAÇÃO",
+    ];
 
-    const csv = [headers.join(separator), ...values].join("\n");
+    const values = app.selects.map((e, index) =>
+      headers.map((key, i) => (i === 0 ? index + 1 : e[key] || ""))
+    );
+
+    const csv = [
+      headers.join(separator),
+      ...values.map((e) => e.join(separator)),
+    ].join("\n");
     const link = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
       download: fullName,
