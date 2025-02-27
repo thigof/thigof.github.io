@@ -3,6 +3,11 @@
     <q-btn flat round icon="arrow_back" @click="goBack" />
     Arquivo <b class="q-ml-sm">{{ app.fileName }}</b>
   </div>
+  <div class="q-mt-lg" style="padding-top: 25px">
+    <fieldset>
+      <input type="file" @change="handleFile" label="Selecionar banco de dados csv" accept=".xls, .csv" />
+    </fieldset>
+  </div>
   <div class="q-pa-sm row items-center q-gutter-md">
     <q-input dense outlined v-model="data.search" label="Pesquisar" style="flex: 1" />
     <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
@@ -11,11 +16,6 @@
 
   <ShowTables :tableData="Array.isArray(filteredTableData) ? filteredTableData : []" :headers="colunas"
     @remove="handleRemoveTable" @clicked="handleClickedTable" />
-  <div class="q-mt-lg" style="padding-top: 25px">
-    <fieldset>
-      <input type="file" @change="handleFile" label="Selecionar banco de dados csv" accept=".xls, .csv" />
-    </fieldset>
-  </div>
 </template>
 
 <script setup>
