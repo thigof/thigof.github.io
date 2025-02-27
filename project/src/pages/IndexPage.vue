@@ -90,6 +90,7 @@ const handleClickedTable = (row) => {
   const item = app.selects.find((e) => e.id === row.id);
   if (item) {
     form.value.npat = item.NRPATRIMONIO1;
+
     setTimeout(() => {
       app.selected.id = item.id;
       app.selected.NRPATRIMONIO1 = item.NRPATRIMONIO1;
@@ -97,6 +98,7 @@ const handleClickedTable = (row) => {
       app.selected.LOCALIZAÇÃO = item.LOCALIZAÇÃO || "";
       app.selected.ESTADO = item.ESTADO || "";
       app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
+      app.selected.VALOR = item.VALOR || "";
     }, 1000);
   }
 };
@@ -120,11 +122,14 @@ watch(
         (e) => e.NRPATRIMONIO1 === String(form.value.npat)
       );
       if (item) {
-        app.selected.id = item.id || uuidv4();
-        app.selected.DESCRICAO = item.DESCRICAO || "";
-        app.selected.LOCALIZAÇÃO = item.LOCALIZAÇÃO || "";
-        app.selected.ESTADO = item.DESC_ESTADO || "";
-        app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
+        Object.assign(app.selected, {
+          id: item.id || uuidv4(),
+          DESCRICAO: item.DESCRICAO || "",
+          LOCALIZAÇÃO: item.LOCALIZAÇÃO || "",
+          ESTADO: item.DESC_ESTADO || "",
+          OBSERVAÇÃO: item.OBSERVAÇÃO || "",
+          VALOR: item.VALOR || "",
+        });
       }
       if (!form.value.npat) {
         app.selected.SITUAÇÃO = "SEM PLACA";

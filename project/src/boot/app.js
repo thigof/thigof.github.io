@@ -16,6 +16,7 @@ export const app = reactive({
     OBSERVAÇÃO: "",
     SITUAÇÃO: "",
     UPDATED: "",
+    VALOR: "",
   },
   selects: [],
   fields: [],
@@ -26,6 +27,7 @@ export const app = reactive({
     { field: "ESTADO", label: "Estado", align: "left" },
     { field: "OBSERVAÇÃO", label: "Observação", align: "left" },
     { field: "SITUAÇÃO", label: "Situação", align: "left" },
+    { field: "VALOR", label: "Valor", align: "left" },
   ],
 });
 
@@ -39,6 +41,7 @@ export const selectedReset = () => {
   app.selected.ESTADO = "";
   app.selected.OBSERVAÇÃO = "";
   app.selected.UPDATED = "";
+  app.selected.VALOR = ""; // Resetar campo VALOR
 };
 
 export const saveItemSelected = () => {
@@ -131,36 +134,74 @@ export function gerarCSV(data, filename = "data", separator = "\t") {
 }
 
 export const gerarTableRelatorio = () => {
-  gerarTableFormate(
-    app.selects.map((e) => ({
-      NPAT: e["NRPATRIMONIO1"] || "",
-      Setor: e["NOME_SETOR"] || "",
-      Local: e["LOCALIZAÇÃO"] || "",
-      Valor:
-        Number(e["VALOR"]).toLocaleString("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        }) || "",
-      Estado: e["DESC_ESTADO"] || "",
-    }))
-  );
+  const data = app.selects.map((e) => ({
+    NPAT: e["NRPATRIMONIO1"] || "",
+    Setor: e["NOME_SETOR"] || "",
+    Local: e["LOCALIZAÇÃO"] || "",
+    Valor: e["VALOR"] || "",
+    Estado: e["SITUAÇÃO"] || "",
+  }));
+  console.log("dados selecionados::: ", app.selects);
+  const tableHTML = gerarTable(data);
+  const htmlWithButton = addCopyButton(tableHTML);
+  downloadHTML(htmlWithButton, "relatorio.html");
+  copyToClipboard(tableHTML);
 };
 
 export const gerarTableTermo = () => {
-  gerarTableFormate(
-    app.selects.map((e) => ({
-      NPAT: e["NRPATRIMONIO1"] || "",
-      Descrição: e["DESCRICAO"] || "",
-      Local: e["LOCALIZAÇÃO"] || "",
-      Setor: e["NOME_SETOR"],
-      Estado: e["DESC_ESTADO"] || "",
-      Valor:
-        Number(e["VALOR"]).toLocaleString("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        }) || "",
-    }))
-  );
+  const data = app.selects.map((e) => ({
+    NPAT: e["NRPATRIMONIO1"] || "",
+    Descrição: e["DESCRICAO"] || "",
+    Local: e["LOCALIZAÇÃO"] || "",
+    Setor: e["NOME_SETOR"],
+    Estado: e["SITUAÇÃO"] || "",
+    Valor: e["VALOR"] || "",
+  }));
+  const tableHTML = gerarTable(data);
+  const htmlWithButton = addCopyButton(tableHTML);
+  downloadHTML(htmlWithButton, "termo.html");
+  copyToClipboard(tableHTML);
+};
+
+const addCopyButton = (tableHTML) => {
+  return `
+    <html>
+      <body>
+        ${tableHTML}
+        <button onclick="copyTable()">Copiar Tabela</button>
+        <script>
+          function copyTable() {
+            const table = document.querySelector('table');
+            const range = document.createRange();
+            range.selectNodeContents(table);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+          }
+        </script>
+      </body>
+    </html>
+  `;
+};
+
+const downloadHTML = (htmlContent, filename) => {
+  const blob = new Blob([htmlContent], { type: "text/html" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+};
+
+const copyToClipboard = (htmlContent) => {
+  const tempElement = document.createElement("div");
+  tempElement.innerHTML = htmlContent;
+  document.body.appendChild(tempElement);
+  const range = document.createRange();
+  range.selectNodeContents(tempElement);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  document.execCommand("copy");
+  document.body.removeChild(tempElement);
 };
 
 export const gerarTable = (data) => {
