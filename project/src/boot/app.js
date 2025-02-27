@@ -134,33 +134,63 @@ export function gerarCSV(data, filename = "data", separator = "\t") {
 }
 
 export const gerarTableRelatorio = () => {
-  const data = app.selects.map((e) => ({
-    NPAT: e["NRPATRIMONIO1"] || "",
-    Setor: e["NOME_SETOR"] || "",
-    Local: e["LOCALIZAÇÃO"] || "",
-    Valor: e["VALOR"] || "",
-    Estado: e["SITUAÇÃO"] || "",
-  }));
-  console.log("dados selecionados::: ", app.selects);
-  const tableHTML = gerarTable(data);
-  const htmlWithButton = addCopyButton(tableHTML);
-  downloadHTML(htmlWithButton, "relatorio.html");
-  copyToClipboard(tableHTML);
+  Dialog.create({
+    title: "Salvar Relatório",
+    message: "Informe o nome do arquivo:",
+    prompt: {
+      model: "relatório",
+      isValid: (val) => val.length > 0,
+      type: "text",
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk((name) => {
+    const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const fullName = `${datePrefix}-${name}.html`;
+
+    const data = app.selects.map((e) => ({
+      NPAT: e["NRPATRIMONIO1"] || "",
+      Setor: e["NOME_SETOR"] || "",
+      Local: e["LOCALIZAÇÃO"] || "",
+      Valor: e["VALOR"] || "",
+      Estado: e["SITUAÇÃO"] || "",
+    }));
+    console.log("dados selecionados::: ", app.selects);
+    const tableHTML = gerarTable(data);
+    const htmlWithButton = addCopyButton(tableHTML);
+    downloadHTML(htmlWithButton, fullName);
+    copyToClipboard(tableHTML);
+  });
 };
 
 export const gerarTableTermo = () => {
-  const data = app.selects.map((e) => ({
-    NPAT: e["NRPATRIMONIO1"] || "",
-    Descrição: e["DESCRICAO"] || "",
-    Local: e["LOCALIZAÇÃO"] || "",
-    Setor: e["NOME_SETOR"],
-    Estado: e["SITUAÇÃO"] || "",
-    Valor: e["VALOR"] || "",
-  }));
-  const tableHTML = gerarTable(data);
-  const htmlWithButton = addCopyButton(tableHTML);
-  downloadHTML(htmlWithButton, "termo.html");
-  copyToClipboard(tableHTML);
+  Dialog.create({
+    title: "Salvar Termo",
+    message: "Informe o nome do arquivo:",
+    prompt: {
+      model: "termo",
+      isValid: (val) => val.length > 0,
+      type: "text",
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk((name) => {
+    const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const fullName = `${datePrefix}-${name}.html`;
+
+    const data = app.selects.map((e) => ({
+      NPAT: e["NRPATRIMONIO1"] || "",
+      Descrição: e["DESCRICAO"] || "",
+      Local: e["LOCALIZAÇÃO"] || "",
+      Setor: e["NOME_SETOR"],
+      Estado: e["SITUAÇÃO"] || "",
+      Valor: e["VALOR"] || "",
+    }));
+    const tableHTML = gerarTable(data);
+    const htmlWithButton = addCopyButton(tableHTML);
+    downloadHTML(htmlWithButton, fullName);
+    copyToClipboard(tableHTML);
+  });
 };
 
 const addCopyButton = (tableHTML) => {
