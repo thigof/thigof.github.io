@@ -6,6 +6,7 @@ import { reactive } from "vue";
 export const app = reactive({
   values: null,
   csv: "",
+  fileName: "",
   selected: {
     id: uuidv4(),
     NRPATRIMONIO1: "",
@@ -100,18 +101,33 @@ export const saveData = () => {
   }
 };
 
-export function gerarCSV(data, filename = "data.csv", separator = "\t") {
-  const headers = Object.keys(data[0]);
-  const values = JSON.parse(JSON.stringify(data))
-    .map((e) => Object.values(e))
-    .map((e) => e.join(separator));
+export function gerarCSV(data, filename = "data", separator = "\t") {
+  Dialog.create({
+    title: "Salvar CSV",
+    message: "Informe o nome do arquivo:",
+    prompt: {
+      model: filename,
+      isValid: (val) => val.length > 0,
+      type: "text",
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk((name) => {
+    const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const fullName = `${datePrefix}-${name}.csv`;
 
-  const csv = [headers.join(separator), ...values].join("\n");
-  const link = Object.assign(document.createElement("a"), {
-    href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
-    download: filename,
+    const headers = Object.keys(data[0]);
+    const values = JSON.parse(JSON.stringify(data))
+      .map((e) => Object.values(e))
+      .map((e) => e.join(separator));
+
+    const csv = [headers.join(separator), ...values].join("\n");
+    const link = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
+      download: fullName,
+    });
+    link.click();
   });
-  link.click();
 }
 
 export const gerarTableRelatorio = () => {
@@ -216,6 +232,7 @@ try {
       if (!e.id) e.id = uuidv4();
       return e;
     });
+    app.fileName = dt.fileName || "";
   }
 } catch (error) {
   console.log("Erro ao carregar dados localStorage: ", error);

@@ -1,42 +1,25 @@
 <template>
-  <div class="q-mt-lg" style="padding-top: 25px">
-    <fieldset>
-      <input
-        type="file"
-        @change="handleFile"
-        label="Selecionar banco de dados csv"
-        accept=".xls, .csv"
-      />
-    </fieldset>
+  <div class="row q-ma-lg flex items-center">
+    <q-btn flat round icon="arrow_back" @click="goBack" />
+    Arquivo <b class="q-ml-sm">{{ app.fileName }}</b>
   </div>
   <div class="q-pa-sm row items-center q-gutter-md">
-    <q-input
-      dense
-      outlined
-      v-model="data.search"
-      label="Pesquisar"
-      style="flex: 1"
-    />
-    <q-select
-      dense
-      outlined
-      v-model="data.multiple"
-      :options="['10', '50', '100', '1000', '10000']"
-      label="Limite"
-      style="width: 100px"
-    />
+    <q-input dense outlined v-model="data.search" label="Pesquisar" style="flex: 1" />
+    <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
+      style="width: 100px" />
   </div>
 
-  <ShowTables
-    :tableData="filteredTableData"
-    :headers="colunas"
-    @remove="handleRemoveTable"
-    @clicked="handleClickedTable"
-  />
+  <ShowTables :tableData="Array.isArray(filteredTableData) ? filteredTableData : []" :headers="colunas"
+    @remove="handleRemoveTable" @clicked="handleClickedTable" />
+  <div class="q-mt-lg" style="padding-top: 25px">
+    <fieldset>
+      <input type="file" @change="handleFile" label="Selecionar banco de dados csv" accept=".xls, .csv" />
+    </fieldset>
+  </div>
 </template>
 
 <script setup>
-import { app, handleFileUpload } from "src/boot/app";
+import { app, handleFileUpload, saveData } from "src/boot/app";
 import ShowTables from "src/components/ShowTables.vue";
 import { computed, reactive } from "vue";
 import { useRouter } from "vue-router";
@@ -48,6 +31,7 @@ const data = reactive({
 });
 
 const colunas = computed(() => {
+  if (!app.values || app.values.length === 0) return [];
   return Object.keys(app.values[0])
     .filter((e) => !["UPDATED", "OBSERVAÇÃO", "SITUAÇÃO", "id"].includes(e))
     .map((e) => ({ field: e, label: e }));
@@ -56,17 +40,38 @@ const colunas = computed(() => {
 // Filtra os dados de acordo com o texto de busca e o limite selecionado
 const filteredTableData = computed(() => {
   const searchLower = data.search.toLowerCase();
-  return app.values
-    .filter((row) => {
-      return Object.values(row).some((value) =>
-        String(value).toLowerCase().includes(searchLower)
-      );
-    })
+  if (app.values?.length === 0) return [];
+
+  return app.values?.filter((row) => {
+    return Object.values(row).some((value) =>
+      String(value).toLowerCase().includes(searchLower)
+    );
+  })
     .slice(0, parseInt(data.multiple));
 });
 
 const handleFile = (event) => {
-  handleFileUpload(event);
-  router.push("/");
+  const file = event.target.files[0];
+  if (file) {
+    handleFileUpload(event).then(() => {
+      app.fileName = file.name;
+      saveData();
+      router.push("/");
+    });
+  }
+};
+
+const handleRemoveTable = (row) => {
+  // Implementar lógica para remover a tabela
+  console.log("Remover tabela:", row);
+};
+
+const handleClickedTable = (row) => {
+  // Implementar lógica para quando uma tabela é clicada
+  console.log("Tabela clicada:", row);
+};
+
+const goBack = () => {
+  router.back();
 };
 </script>

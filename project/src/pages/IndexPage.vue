@@ -9,12 +9,7 @@
       </router-link>
     </div>
 
-    <InputFixed
-      tipo="number"
-      :textSelect="true"
-      v-model="form.npat"
-      :label1="'NPAT ' + getLabelNpat"
-    />
+    <InputFixed tipo="number" :textSelect="true" v-model="form.npat" :label1="'NPAT ' + getLabelNpat" />
 
     <InputFixed v-model="app.selected.DESCRICAO" label1="Descrição" />
 
@@ -26,75 +21,32 @@
 
     <div class="row q-mt-sm q-gutter-md">
       <div class="">
-        <q-btn
-          color="green-9"
-          type="button"
-          icon="send"
-          label="Salvar"
-          @click="submitForm"
-        />
+        <q-btn color="green-9" type="button" icon="send" label="Adicionar" @click="submitForm" />
       </div>
       <div class="">
-        <q-btn
-          color="yellow-9"
-          type="button"
-          icon="close"
-          label="Cancelar"
-          v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZAÇÃO"
-          @click="clearForm"
-        />
+        <q-btn color="yellow-9" type="button" icon="close" label="Cancelar"
+          v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZAÇÃO" @click="clearForm" />
       </div>
     </div>
 
     <div class="row center q-mt-lg">
       <div class="col">
-        <q-btn
-          flat
-          class="col-2 col-sm-6"
-          icon="description"
-          label="CSV"
-          type="button"
-          @click="gerarCSV(app.selects)"
-        />
+        <q-btn flat class="col-2 col-sm-6" icon="description" label="CSV" type="button"
+          @click="gerarCSV(app.selects)" />
       </div>
       <div class="col">
-        <q-btn
-          flat
-          class="col-2 col-sm-2"
-          icon="code"
-          label="Relatório"
-          @click.prevent="gerarTableRelatorio"
-        />
+        <q-btn flat class="col-2 col-sm-2" icon="code" label="Relatório" @click.prevent="gerarTableRelatorio" />
       </div>
       <div class="col">
-        <q-btn
-          flat
-          class="col-3 col-sm-4"
-          icon="code"
-          label="Termo"
-          type="button"
-          @click="gerarTableTermo"
-        />
+        <q-btn flat class="col-3 col-sm-4" icon="code" label="Termo" type="button" @click="gerarTableTermo" />
       </div>
       <div class="col" v-show="app.selects?.length">
-        <q-btn
-          flat
-          class="col-3 col-sm-4"
-          icon="clear"
-          label="Limpar"
-          type="button"
-          @click="limparTabela"
-        />
+        <q-btn flat class="col-3 col-sm-4" icon="clear" label="Limpar" type="button" @click="limparTabela" />
       </div>
     </div>
   </q-form>
-  <ShowTables
-    :tableData="app.selects"
-    :headers="app.colunas"
-    @remove="handleRemoveTable"
-    @clicked="handleClickedTable"
-    :reverse="true"
-  />
+  <ShowTables :tableData="app.selects" :headers="app.colunas" @remove="handleRemoveTable" @clicked="handleClickedTable"
+    :reverse="true" />
   Itens selecionados: {{ app.selects.length }}
 </template>
 
