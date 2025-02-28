@@ -1,24 +1,22 @@
 <template>
-  <div class="row title flex items-center justify-center">
-    Arquivo <b class="q-ml-sm">{{ app.fileName }}</b>
-  </div>
-  <div class="q-mt-lg" style="padding-top: 25px">
-    <fieldset>
-      <input type="file" @change="handleFile" label="Selecionar banco de dados csv" accept=".xls, .csv" />
-    </fieldset>
-  </div>
-  <div class="q-pa-sm row items-center q-gutter-md">
-    <q-input dense outlined v-model="data.search" label="Pesquisar" style="flex: 1" />
-    <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
-      style="width: 100px" />
-  </div>
-  <div class="row right"> Registros: {{ Math.min(data.multiple, data.filteredTableData.length) }} / {{
-    app.values?.length }}
-  </div>
+  <div class="container">
+    <div class="row title flex items-center justify-center">
+      <q-btn class="q-ml-sm" icon="upload" :label="app.fileName || 'Selecionar banco de dados CSV'"
+        @click="$refs.fileInput.click()" />
+      <input type="file" ref="fileInput" @change="handleFile" accept=".xls,.csv" hidden />
+    </div>
+    <div class="q-mt-sm row items-center q-gutter-md">
+      <q-input dense outlined v-model="data.search" label="Pesquisar" style="flex: 1" />
+      <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
+        style="width: 100px" />
+    </div>
+    <div class="row flex justify-end text-right">
+      Registros: {{ Math.min(data.multiple, data.filteredTableData.length) }} / {{ app.values?.length }}
+    </div>
 
-  <ShowTables :tableData="Array.isArray(data.filteredTableData) ? data.filteredTableData : []" :headers="colunas"
-    @remove="handleRemoveTable" @clicked="handleClickedTable" />
-
+    <ShowTables :tableData="Array.isArray(data.filteredTableData) ? data.filteredTableData : []" :headers="colunas"
+      @remove="handleRemoveTable" @clicked="handleClickedTable" />
+  </div>
 </template>
 
 <script setup>
@@ -72,7 +70,7 @@ const handleFile = async (event) => {
       await handleFileUpload(event);
       app.fileName = file.name;
       saveData();
-      router.push("/");
+      // router.push("/");
     } catch (error) {
       console.error("Erro ao fazer upload do arquivo:", error);
     }
@@ -92,6 +90,10 @@ const handleClickedTable = (row) => {
 </script>
 
 <style scope>
+.container {
+  padding: 20px;
+}
+
 .title {
   position: absolute;
   top: 20px;
