@@ -12,10 +12,11 @@
     <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
       style="width: 100px" />
   </div>
-  <div class="row right"> Registros: {{ Math.min(data.multiple, app.values?.length) }} / {{ app.values?.length }}
+  <div class="row right"> Registros: {{ Math.min(data.multiple, data.filteredTableData.length) }} / {{
+    app.values?.length }}
   </div>
 
-  <ShowTables :tableData="Array.isArray(filteredTableData) ? filteredTableData : []" :headers="colunas"
+  <ShowTables :tableData="Array.isArray(data.filteredTableData) ? data.filteredTableData : []" :headers="colunas"
     @remove="handleRemoveTable" @clicked="handleClickedTable" />
 
 </template>
@@ -23,13 +24,15 @@
 <script setup>
 import { app, handleFileUpload, saveData } from "src/boot/app";
 import ShowTables from "src/components/ShowTables.vue";
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
+import { debounce } from "lodash";
 
 const router = useRouter();
 const data = reactive({
   search: "",
   multiple: "10",
+  filteredTableData: []
 });
 
 const colunas = computed(() => {
@@ -39,18 +42,28 @@ const colunas = computed(() => {
     .map((e) => ({ field: e, label: e }));
 });
 
-// Filtra os dados de acordo com o texto de busca e o limite selecionado
-const filteredTableData = computed(() => {
+const updateFilteredTableData = debounce(() => {
   const searchLower = data.search.toLowerCase();
-  if (app.values?.length === 0) return [];
+  if (app.values?.length === 0) {
+    data.filteredTableData = [];
+    return;
+  }
+  if (!searchLower) {
+    data.filteredTableData = app.values.slice(0, parseInt(data.multiple));
+    return;
+  }
 
-  return app.values?.filter((row) => {
-    return Object.values(row).some((value) =>
-      String(value).toLowerCase().includes(searchLower)
-    );
-  })
-    .slice(0, parseInt(data.multiple));
-});
+  const searchTerms = searchLower.split(" ").filter(term => term);
+
+  const filtered = app.values?.filter((row) => {
+    const value = JSON.stringify([row.NRPATRIMONIO1, row.DESCRICAO]).toLowerCase();
+    return searchTerms.every(term => value.includes(term));
+  }).slice(0, parseInt(data.multiple));
+
+  data.filteredTableData = filtered;
+}, 300);
+
+watch(() => [data.search, data.multiple, app.values], updateFilteredTableData, { immediate: true });
 
 const handleFile = async (event) => {
   const file = event.target.files[0];
