@@ -9,7 +9,7 @@
       </a>
     </div>
 
-    <input type="text" @input="saveSession" class="editable" :value="app.session" />
+    <input type="text" @input="saveSession" @focus="selectAll" class="editable" :value="app.session" />
 
     <InputFixed tipo="number" :textSelect="true" v-model="form.npat" :label1="'NPAT ' + getLabelNpat" />
 
@@ -161,6 +161,10 @@ const saveSession = debounce((event) => {
   saveData();
   console.log("session: ", app.session);
 }, 300);
+
+const selectAll = (event) => {
+  event.target.select();
+};
 
 try {
   form.value.npat = null;
