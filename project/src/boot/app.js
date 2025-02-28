@@ -104,7 +104,7 @@ export const saveData = () => {
   }
 };
 
-export function gerarCSV(data, filename = "data", separator = "\t") {
+export function gerarCSV(data, filename = "", separator = "\t") {
   Dialog.create({
     title: "Salvar CSV",
     message: "Informe o nome do arquivo:",
@@ -120,17 +120,9 @@ export function gerarCSV(data, filename = "data", separator = "\t") {
     const fullName = `${datePrefix}-${name}.csv`;
 
     const headers = [
-      "SEQ",
       "NRPATRIMONIO1",
       "DESCRICAO",
-      "CODCLASSIFICACAO",
-      "NOME_SETOR",
       "LOCALIZAÇÃO",
-      "VALOR",
-      "DATACADASTRO",
-      "DESC_ESTADO",
-      "NRNOTAFISCAL",
-      "NOMEUNIDADE",
       "ESTADO",
       "OBSERVAÇÃO",
       "SITUAÇÃO",
@@ -169,7 +161,7 @@ export const gerarTableRelatorio = () => {
 
     const data = app.selects.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
-      Setor: e["NOME_SETOR"] || "",
+      Descrição: e["DESCRICAO"] || "",
       Local: e["LOCALIZAÇÃO"] || "",
       Valor: e["VALOR"] || "",
       Estado: e["SITUAÇÃO"] || "",
@@ -201,7 +193,6 @@ export const gerarTableTermo = () => {
       NPAT: e["NRPATRIMONIO1"] || "",
       Descrição: e["DESCRICAO"] || "",
       Local: e["LOCALIZAÇÃO"] || "",
-      Setor: e["NOME_SETOR"],
       Estado: e["SITUAÇÃO"] || "",
       Valor: e["VALOR"] || "",
     }));
