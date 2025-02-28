@@ -145,62 +145,84 @@ export function gerarCSV(data, filename = "", separator = "\t") {
   });
 }
 
-export const gerarTableRelatorio = () => {
+const gerarTableHTML = (sortedSelects) => {
+  const groupedData = sortedSelects.reduce((acc, item) => {
+    const situacao = item["SITUAÇÃO"] || "REGULAR";
+    if (!acc[situacao]) acc[situacao] = [];
+    acc[situacao].push(item);
+    return acc;
+  }, {});
+
+  let htmlContent = "";
+  for (const [situacao, items] of Object.entries(groupedData)) {
+    htmlContent += `<h3>${situacao}</h3>`;
+    const data = items.map((e) => ({
+      NPAT: e["NRPATRIMONIO1"] || "",
+      Descrição: e["DESCRICAO"] || "",
+      Local: e["LOCALIZAÇÃO"] || "",
+      Estado: e["SITUAÇÃO"] || "",
+      Valor: e["VALOR"] || "",
+    }));
+    htmlContent += gerarTable(data);
+  }
+  return htmlContent;
+};
+
+const gerarTableDialog = (title, defaultName, callback) => {
   Dialog.create({
-    title: "Salvar Relatório",
+    title,
     message: "Informe o nome do arquivo:",
     prompt: {
-      model: "Relatório " + app.session,
+      model: defaultName,
       isValid: (val) => val.length > 0,
       type: "text",
     },
     cancel: true,
     persistent: true,
-  }).onOk((name) => {
+  }).onOk(callback);
+};
+
+export const gerarTableRelatorio = () => {
+  const sortedSelects = [...app.selects].sort((a, b) => {
+    const order = ["REGULAR", "SEM PLACA", "SEM REGISTRO", "SEM SITUAÇÃO"];
+    const situacaoA = order.indexOf(a["SITUAÇÃO"] || "REGULAR");
+    const situacaoB = order.indexOf(b["SITUAÇÃO"] || "REGULAR");
+    if (situacaoA !== situacaoB) return situacaoA - situacaoB;
+    const numA = Number(a["NRPATRIMONIO1"]) || Infinity;
+    const numB = Number(b["NRPATRIMONIO1"]) || Infinity;
+    return numA - numB;
+  });
+
+  gerarTableDialog("Salvar Relatório", "Relatório " + app.session, (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
 
-    const data = app.selects.map((e) => ({
-      NPAT: e["NRPATRIMONIO1"] || "",
-      Descrição: e["DESCRICAO"] || "",
-      Local: e["LOCALIZAÇÃO"] || "",
-      Valor: e["VALOR"] || "",
-      Estado: e["SITUAÇÃO"] || "",
-    }));
-    console.log("dados selecionados::: ", app.selects);
-    const tableHTML = gerarTable(data);
-    const htmlWithButton = addCopyButton(tableHTML);
+    const htmlContent = gerarTableHTML(sortedSelects);
+    const htmlWithButton = addCopyButton(htmlContent);
     downloadHTML(htmlWithButton, fullName);
-    copyToClipboard(tableHTML);
+    copyToClipboard(htmlContent);
   });
 };
 
 export const gerarTableTermo = () => {
-  Dialog.create({
-    title: "Salvar Termo",
-    message: "Informe o nome do arquivo:",
-    prompt: {
-      model: "Termo " + app.session,
-      isValid: (val) => val.length > 0,
-      type: "text",
-    },
-    cancel: true,
-    persistent: true,
-  }).onOk((name) => {
+  const sortedSelects = [...app.selects].sort((a, b) => {
+    const order = ["REGULAR", "SEM PLACA", "SEM REGISTRO", "SEM SITUAÇÃO"];
+    const situacaoA = order.indexOf(a["SITUAÇÃO"] || "REGULAR");
+    const situacaoB = order.indexOf(b["SITUAÇÃO"] || "REGULAR");
+    if (situacaoA !== situacaoB) return situacaoA - situacaoB;
+    const numA = Number(a["NRPATRIMONIO1"]) || Infinity;
+    const numB = Number(b["NRPATRIMONIO1"]) || Infinity;
+    return numA - numB;
+  });
+
+  gerarTableDialog("Salvar Termo", "Termo " + app.session, (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
 
-    const data = app.selects.map((e) => ({
-      NPAT: e["NRPATRIMONIO1"] || "",
-      Descrição: e["DESCRICAO"] || "",
-      Local: e["LOCALIZAÇÃO"] || "",
-      Estado: e["SITUAÇÃO"] || "",
-      Valor: e["VALOR"] || "",
-    }));
-    const tableHTML = gerarTable(data);
-    const htmlWithButton = addCopyButton(tableHTML);
+    const htmlContent = gerarTableHTML(sortedSelects);
+    const htmlWithButton = addCopyButton(htmlContent);
     downloadHTML(htmlWithButton, fullName);
-    copyToClipboard(tableHTML);
+    copyToClipboard(htmlContent);
   });
 };
 
