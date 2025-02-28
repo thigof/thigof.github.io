@@ -7,15 +7,15 @@
     </div>
     <div class="q-mt-sm row items-center q-gutter-md">
       <q-input dense outlined v-model="data.search" label="Pesquisar" style="flex: 1" />
-      <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
+      <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Exibir"
         style="width: 100px" />
-    </div>
-    <div class="row flex justify-end text-right">
-      Registros: {{ Math.min(data.multiple, data.filteredTableData.length) }} / {{ app.values?.length }}
     </div>
 
     <ShowTables :tableData="Array.isArray(data.filteredTableData) ? data.filteredTableData : []" :headers="colunas"
       @remove="handleRemoveTable" @clicked="handleClickedTable" />
+    <div class="row flex justify-end text-right text-dark">
+      Registros: {{ Math.min(data.multiple, data.filteredTableData.length) }} / {{ app.values?.length }}
+    </div>
   </div>
 </template>
 
