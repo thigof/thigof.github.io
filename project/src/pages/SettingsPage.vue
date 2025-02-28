@@ -13,9 +13,12 @@
     <q-select dense outlined v-model="data.multiple" :options="['10', '50', '100', '1000', '10000']" label="Limite"
       style="width: 100px" />
   </div>
+  <div class="row text-right"> Registros: {{ Math.min(data.multiple, app.values?.length) }} / {{ app.values?.length }}
+  </div>
 
   <ShowTables :tableData="Array.isArray(filteredTableData) ? filteredTableData : []" :headers="colunas"
     @remove="handleRemoveTable" @clicked="handleClickedTable" />
+
 </template>
 
 <script setup>

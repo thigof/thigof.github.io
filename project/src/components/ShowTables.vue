@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <table v-if="!isMobile">
+  <div class="row table-content" v-if="!isMobile">
+    <table>
       <thead>
         <tr>
           <th v-for="header in headers" :key="header.field" :align="header.align">
@@ -20,15 +20,14 @@
         </tr>
       </tbody>
     </table>
-
-    <div v-else class="card-grid">
-      <div v-for="(row, index) in getDataTable()" :key="index" class="card" @click="click(row)">
-        <div v-for="{ field, label } in headers" :key="field">
-          <strong>{{ label }}:</strong> {{ row[field] }}
-        </div>
-        <div class="actions">
-          <q-btn icon="delete" color="negative" @click.stop="remove(row)" size="sm" />
-        </div>
+  </div>
+  <div v-else class=" row card-grid">
+    <div v-for="(row, index) in getDataTable()" :key="index" class="card" @click="click(row)">
+      <div v-for="{ field, label } in headers" :key="field">
+        <strong>{{ label }}:</strong> {{ row[field] }}
+      </div>
+      <div class="actions">
+        <q-btn icon="delete" color="negative" @click.stop="remove(row)" size="sm" />
       </div>
     </div>
   </div>
@@ -66,8 +65,12 @@ const remove = (row) => {
 </script>
 
 <style scoped>
-table {
+.table-content {
+  overflow-x: auto;
   width: 100%;
+}
+
+table {
   border-collapse: collapse;
 
   th,
