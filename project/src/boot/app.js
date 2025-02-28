@@ -7,6 +7,7 @@ export const app = reactive({
   values: null,
   csv: "",
   fileName: "",
+  session: "",
   selected: {
     id: uuidv4(),
     NRPATRIMONIO1: "",
@@ -109,7 +110,7 @@ export function gerarCSV(data, filename = "", separator = "\t") {
     title: "Salvar CSV",
     message: "Informe o nome do arquivo:",
     prompt: {
-      model: filename,
+      model: "CSV " + app.session,
       isValid: (val) => val.length > 0,
       type: "text",
     },
@@ -149,7 +150,7 @@ export const gerarTableRelatorio = () => {
     title: "Salvar Relatório",
     message: "Informe o nome do arquivo:",
     prompt: {
-      model: "relatório",
+      model: "Relatório " + app.session,
       isValid: (val) => val.length > 0,
       type: "text",
     },
@@ -179,7 +180,7 @@ export const gerarTableTermo = () => {
     title: "Salvar Termo",
     message: "Informe o nome do arquivo:",
     prompt: {
-      model: "termo",
+      model: "Termo " + app.session,
       isValid: (val) => val.length > 0,
       type: "text",
     },
@@ -314,6 +315,7 @@ try {
       return e;
     });
     app.fileName = dt.fileName || "";
+    app.session = dt.session || "...";
   }
 } catch (error) {
   console.log("Erro ao carregar dados localStorage: ", error);

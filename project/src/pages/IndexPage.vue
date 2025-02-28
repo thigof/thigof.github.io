@@ -9,6 +9,8 @@
       </a>
     </div>
 
+    <input type="text" @input="saveSession" class="editable" :value="app.session" />
+
     <InputFixed tipo="number" :textSelect="true" v-model="form.npat" :label1="'NPAT ' + getLabelNpat" />
 
     <InputFixed v-model="app.selected.DESCRICAO" label1="Descrição" />
@@ -55,6 +57,7 @@ import { computed, ref, watch } from "vue";
 import ShowTables from "src/components/ShowTables.vue";
 import InputFixed from "src/components/InputFixed.vue";
 import { v4 as uuidv4 } from "uuid";
+import { debounce } from "lodash";
 import {
   app,
   gerarCSV,
@@ -153,6 +156,12 @@ const scrollToShowTables = () => {
   }
 };
 
+const saveSession = debounce((event) => {
+  app.session = event.target.value;
+  saveData();
+  console.log("session: ", app.session);
+}, 300);
+
 try {
   form.value.npat = null;
 } catch (error) {
@@ -168,5 +177,18 @@ try {
       height: 20px;
     }
   }
+}
+
+.editable {
+  text-align: center;
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  width: 100%;
+  background-color: transparent;
+  position: absolute;
+  left: 50%;
+  top: 60px;
+  transform: translateX(-50%);
 }
 </style>
