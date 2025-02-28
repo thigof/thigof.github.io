@@ -4,9 +4,9 @@
       <router-link to="/settings">
         <q-chip> {{ app?.values?.length || 0 }} registros </q-chip>
       </router-link>
-      <router-link to="/">
+      <a href="#show-tables" @click.prevent="scrollToShowTables">
         <q-chip> {{ app?.selects?.length }} verificados </q-chip>
-      </router-link>
+      </a>
     </div>
 
     <InputFixed tipo="number" :textSelect="true" v-model="form.npat" :label1="'NPAT ' + getLabelNpat" />
@@ -45,8 +45,8 @@
       </div>
     </div>
   </q-form>
-  <ShowTables :tableData="app.selects" :headers="app.colunas" @remove="handleRemoveTable" @clicked="handleClickedTable"
-    :reverse="true" />
+  <ShowTables id="show-tables" :tableData="app.selects" :headers="app.colunas" @remove="handleRemoveTable"
+    @clicked="handleClickedTable" :reverse="true" />
   Itens selecionados: {{ app.selects.length }}
 </template>
 
@@ -145,6 +145,13 @@ watch(
   },
   { immediate: true }
 );
+
+const scrollToShowTables = () => {
+  const element = document.getElementById("show-tables");
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth" });
+  }
+};
 
 try {
   form.value.npat = null;

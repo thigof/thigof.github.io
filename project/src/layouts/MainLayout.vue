@@ -16,7 +16,7 @@
         </q-list>
       </q-menu>
     </q-btn>
-    <q-page-container style="padding: 3px 4px 3px 3px">
+    <q-page-container>
       <router-view />
     </q-page-container>
   </q-layout>
