@@ -53,14 +53,17 @@ const filteredTableData = computed(() => {
     .slice(0, parseInt(data.multiple));
 });
 
-const handleFile = (event) => {
+const handleFile = async (event) => {
   const file = event.target.files[0];
   if (file) {
-    handleFileUpload(event).then(() => {
+    try {
+      await handleFileUpload(event);
       app.fileName = file.name;
       saveData();
       router.push("/");
-    });
+    } catch (error) {
+      console.error("Erro ao fazer upload do arquivo:", error);
+    }
   }
 };
 
