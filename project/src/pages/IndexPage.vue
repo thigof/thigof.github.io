@@ -1,15 +1,19 @@
 <template>
   <q-form @submit.prevent="submitForm">
-    <div class="q-pa-md row items-start q-gutter-md">
-      <router-link to="/settings">
-        <q-chip> {{ app?.values?.length || 0 }} registros </q-chip>
-      </router-link>
-      <a href="#show-tables" @click.prevent="scrollToShowTables">
-        <q-chip> {{ app?.selects?.length }} verificados </q-chip>
-      </a>
+    <div class="q-pa-md row flex items-center q-gutter-md">
+      <div class="column items-center">
+        <small style="position: absolute;top: 15px;">BASE DE DADOS</small>
+        <router-link to="/settings">
+          <q-chip> {{ app?.values?.length || 0 }} registros </q-chip>
+        </router-link>
+      </div>
+      <div class="column items-center">
+        <small style="position: absolute;top: 15px;">VERIFICADOS</small>
+        <a href="#show-tables" @click.prevent="scrollToShowTables">
+          <q-chip> {{ app?.selects?.length }} registros </q-chip>
+        </a>
+      </div>
     </div>
-
-    <input type="text" @input="saveSession" @focus="selectAll" class="editable" :value="app.session" />
 
     <InputFixed tipo="number" :textSelect="true" v-model="form.npat" :label1="'NPAT ' + getLabelNpat" />
 
@@ -156,11 +160,6 @@ const scrollToShowTables = () => {
   }
 };
 
-const saveSession = debounce((event) => {
-  app.session = event.target.value;
-  saveData();
-  console.log("session: ", app.session);
-}, 300);
 
 const selectAll = (event) => {
   event.target.select();
@@ -181,18 +180,5 @@ try {
       height: 20px;
     }
   }
-}
-
-.editable {
-  text-align: center;
-  border: none;
-  outline: none;
-  padding: 0.5rem;
-  width: 100%;
-  background-color: transparent;
-  position: absolute;
-  left: 50%;
-  top: 60px;
-  transform: translateX(-50%);
 }
 </style>

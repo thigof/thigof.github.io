@@ -110,7 +110,7 @@ export function gerarCSV(data, filename = "", separator = "\t") {
     title: "Salvar CSV",
     message: "Informe o nome do arquivo:",
     prompt: {
-      model: "CSV " + app.session,
+      model: "CSV ",
       isValid: (val) => val.length > 0,
       type: "text",
     },
@@ -193,7 +193,7 @@ export const gerarTableRelatorio = () => {
     return numA - numB;
   });
 
-  gerarTableDialog("Salvar Relatório", "Relatório " + app.session, (name) => {
+  gerarTableDialog("Salvar Relatório", "Relatório ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
 
@@ -215,7 +215,7 @@ export const gerarTableTermo = () => {
     return numA - numB;
   });
 
-  gerarTableDialog("Salvar Termo", "Termo " + app.session, (name) => {
+  gerarTableDialog("Salvar Termo", "Termo ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
 
@@ -337,7 +337,7 @@ try {
       return e;
     });
     app.fileName = dt.fileName || "";
-    app.session = dt.session || "...";
+    app.session = dt.session || "";
   }
 } catch (error) {
   console.log("Erro ao carregar dados localStorage: ", error);
