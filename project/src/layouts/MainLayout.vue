@@ -1,12 +1,7 @@
 <template>
   <q-layout view="lHh lpr lFf">
-    <q-btn
-      color="primary"
-      flat
-      round
-      icon="more_vert"
-      class="z-top absolute-top-right q-pa-md"
-    >
+    <q-btn v-if="!isHome" flat round class="q-pa-md" icon="arrow_back" @click="goBack" />
+    <q-btn color="primary" flat round icon="more_vert" class="z-top absolute-top-right q-pa-md">
       <q-menu anchor="top right" self="top end" class="z-top">
         <q-list>
           <q-item to="/" clickable v-close-popup>
@@ -29,6 +24,16 @@
 
 <script setup>
 import { Dialog } from "quasar";
+import { useRouter } from "vue-router";
+import { ref, watch } from 'vue';
+
+const router = useRouter();
+
+const isHome = ref(router.currentRoute.value.path === '/');
+
+watch(() => router.currentRoute.value.path, (newPath) => {
+  isHome.value = newPath === '/';
+});
 
 const restore = () => {
   Dialog.create({
@@ -43,6 +48,9 @@ const restore = () => {
     localStorage.clear();
     window.location.reload();
   });
+};
+const goBack = () => {
+  router.back();
 };
 </script>
 

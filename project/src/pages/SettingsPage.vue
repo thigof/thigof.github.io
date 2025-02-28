@@ -1,6 +1,5 @@
 <template>
-  <div class="row q-ma-lg flex items-center">
-    <q-btn flat round icon="arrow_back" @click="goBack" />
+  <div class="row title flex items-center justify-center">
     Arquivo <b class="q-ml-sm">{{ app.fileName }}</b>
   </div>
   <div class="q-mt-lg" style="padding-top: 25px">
@@ -77,7 +76,13 @@ const handleClickedTable = (row) => {
   console.log("Tabela clicada:", row);
 };
 
-const goBack = () => {
-  router.back();
-};
 </script>
+
+<style scope>
+.title {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+</style>
