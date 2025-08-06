@@ -10,8 +10,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, index) in getDataTable()" :key="index" @click="click(row)"
-          :class="{ 'editing-row': row.id === editingRowId }">
+        <tr
+          v-for="(row, index) in getDataTable()"
+          :key="index"
+          @click="click(row)"
+          :class="{ 'editing-row': row.id === editingRowId }"
+        >
           <td v-for="header in headers" :key="header.field">
             {{ row[header.field] }}
           </td>
@@ -23,8 +27,13 @@
     </table>
   </div>
   <div v-else class="row card-grid">
-    <div v-for="(row, index) in getDataTable()" :key="index" class="card"
-      :class="{ 'editing-row': row.id === editingRowId }" @click="click(row)">
+    <div
+      v-for="(row, index) in getDataTable()"
+      :key="index"
+      class="card"
+      :class="{ 'editing-row': row.id === editingRowId }"
+      @click="click(row)"
+    >
       <div v-for="{ field, label } in headers" :key="field">
         <strong>{{ label }}:</strong> {{ row[field] }}
       </div>
@@ -48,7 +57,7 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  editingRowId: { // Nova prop para o ID da linha em edição
+  editingRowId: {
     type: [String, null],
     default: null,
   },
@@ -81,8 +90,7 @@ table {
   border-collapse: collapse;
 }
 
-table th,
-table td {
+table th, table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
@@ -116,7 +124,6 @@ table th {
   }
 }
 
-/* Novo estilo para a linha em edição */
 .editing-row {
   border: 2px solid red !important;
 }

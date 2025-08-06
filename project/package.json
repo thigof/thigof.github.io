@@ -16,6 +16,7 @@
     "@quasar/extras": "^1.16.4",
     "axios": "^1.2.1",
     "iconv-lite": "^0.6.3",
+    "lodash": "^4.17.21",
     "papaparse": "^5.4.1",
     "quasar": "^2.16.0",
     "uuid": "^11.0.3",

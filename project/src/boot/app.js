@@ -8,65 +8,86 @@ export const app = reactive({
   csv: "",
   fileName: "",
   session: "",
+  // Padronização dos nomes das propriedades para consistência
   selected: {
     id: uuidv4(),
     NRPATRIMONIO1: "",
     DESCRICAO: "",
-    LOCALIZAÇÃO: "",
+    LOCALIZACAO: "",
     ESTADO: "",
-    OBSERVAÇÃO: "",
-    SITUAÇÃO: "",
+    OBSERVACAO: "",
+    SITUACAO: "",
+    UPDATED: "",
+    VALOR: "",
+  },
+  selected_db: {
+    id: null,
+    NRPATRIMONIO1: "",
+    DESCRICAO: "",
+    LOCALIZACAO: "",
+    ESTADO: "",
+    OBSERVACAO: "",
+    SITUACAO: "",
     UPDATED: "",
     VALOR: "",
   },
   selects: [],
   fields: [],
+  // Padronização das colunas
   colunas: [
     { field: "NRPATRIMONIO1", label: "NPAT", align: "left" },
     { field: "DESCRICAO", label: "Descrição", align: "left" },
-    { field: "LOCALIZAÇÃO", label: "Local", align: "left" },
+    { field: "LOCALIZACAO", label: "Local", align: "left" },
     { field: "ESTADO", label: "Estado", align: "left" },
-    { field: "OBSERVAÇÃO", label: "Observação", align: "left" },
-    { field: "SITUAÇÃO", label: "Situação", align: "left" },
-    { field: "VALOR", label: "Valor", align: "left" },
+    { field: "OBSERVACAO", label: "Observação", align: "left" },
+    { field: "SITUACAO", label: "Situação", align: "left" },
   ],
 });
 
 export const selectedCreate = () => {};
 
 export const selectedReset = () => {
+  // Reseta app.selected
   app.selected.id = uuidv4();
   app.selected.NRPATRIMONIO1 = "";
   app.selected.DESCRICAO = "";
-  app.selected.LOCALIZAÇÃO = "";
+  app.selected.LOCALIZACAO = "";
   app.selected.ESTADO = "";
-  app.selected.OBSERVAÇÃO = "";
+  app.selected.OBSERVACAO = "";
   app.selected.UPDATED = "";
-  app.selected.VALOR = ""; // Resetar campo VALOR
+  app.selected.VALOR = "";
+  app.selected.SITUACAO = "SEM PLACA";
+
+  // Reseta app.selected_db
+  app.selected_db.id = null;
+  app.selected_db.NRPATRIMONIO1 = "";
+  app.selected_db.DESCRICAO = "";
+  app.selected_db.LOCALIZACAO = "";
+  app.selected_db.ESTADO = "";
+  app.selected_db.OBSERVACAO = "";
+  app.selected_db.SITUACAO = "";
+  app.selected_db.UPDATED = "";
+  app.selected_db.VALOR = "";
 };
 
 export const saveItemSelected = () => {
-  const item = Object.fromEntries(app.fields.map((key) => [key, ""]));
-  Object.assign(item, JSON.parse(JSON.stringify(app.selected)));
+  // **LÓGICA DE ATUALIZAÇÃO CORRIGIDA**
+  // 1. Cria uma cópia do item selecionado para evitar alterações no original
+  const itemToSave = { ...app.selected };
+  itemToSave.UPDATED = new Date();
 
-  item.UPDATED = new Date();
+  // 2. Procura o item existente pelo ID único
+  const existingIndex = app.selects.findIndex(e => e.id === itemToSave.id);
 
-  // Item inserido
-  const isItemInserted =
-    app.selected.NRPATRIMONIO1 &&
-    !!app.selects.find((e) => e.NRPATRIMONIO1 === app.selected.NRPATRIMONIO1);
-  if (isItemInserted || !item.INSERTED) {
-    item.INSERTED = new Date();
+  if (existingIndex !== -1) {
+    // 3. Se o item existe, atualiza ele diretamente na sua posição original
+    app.selects[existingIndex] = itemToSave;
+  } else {
+    // 4. Se não existe, adiciona-o como um novo item
+    app.selects.push(itemToSave);
   }
 
-  if (item.id) {
-    app.selects = app.selects.filter(
-      (e) =>
-        e.id !== item.id ||
-        (item.NRPATRIMONIO1 && e.NRPATRIMONIO1 !== item.NRPATRIMONIO1)
-    );
-  }
-  app.selects.push(item);
+  saveData();
   return true;
 };
 
@@ -81,16 +102,17 @@ export const handleFileUpload = (event) => {
     const result = Papa.parse(csvData, {
       header: true,
     });
+    // Padroniza os nomes das propriedades ao carregar o CSV
     app.values = result.data.map((e) =>
       Object.keys(e).reduce(
         (acc, key) => {
-          if (key.trim()) acc[key] = e[key];
+          const newKey = key.trim().replace("LOCALIZAÇÃO", "LOCALIZACAO").replace("OBSERVAÇÃO", "OBSERVACAO");
+          if (newKey) acc[newKey] = e[key];
           return acc;
         },
-        { SITUAÇÃO: "", OBSERVAÇÃO: "", UPDATED: "" }
+        { SITUACAO: "", OBSERVACAO: "", UPDATED: "" }
       )
     );
-
     app.fields = result.meta.fields;
     saveData();
   };
@@ -123,14 +145,14 @@ export function gerarCSV(data, filename = "", separator = "\t") {
     const headers = [
       "NRPATRIMONIO1",
       "DESCRICAO",
-      "LOCALIZAÇÃO",
+      "LOCALIZACAO",
       "ESTADO",
-      "OBSERVAÇÃO",
-      "SITUAÇÃO",
+      "OBSERVACAO",
+      "SITUACAO",
     ];
 
     const values = app.selects.map((e, index) =>
-      headers.map((key, i) => (i === 0 ? index + 1 : e[key] || ""))
+      headers.map((key) => e[key] || "")
     );
 
     const csv = [
@@ -147,7 +169,7 @@ export function gerarCSV(data, filename = "", separator = "\t") {
 
 const gerarTableHTML = (sortedSelects) => {
   const groupedData = sortedSelects.reduce((acc, item) => {
-    const situacao = item["SITUAÇÃO"] || "REGULAR";
+    const situacao = item["SITUACAO"] || "REGULAR";
     if (!acc[situacao]) acc[situacao] = [];
     acc[situacao].push(item);
     return acc;
@@ -159,8 +181,8 @@ const gerarTableHTML = (sortedSelects) => {
     const data = items.map((e) => ({
       NPAT: e["NRPATRIMONIO1"] || "",
       Descrição: e["DESCRICAO"] || "",
-      Local: e["LOCALIZAÇÃO"] || "",
-      Estado: e["SITUAÇÃO"] || "",
+      Local: e["LOCALIZACAO"] || "",
+      Estado: e["SITUACAO"] || "",
       Valor: e["VALOR"] || "",
     }));
     htmlContent += gerarTable(data);
@@ -185,8 +207,8 @@ const gerarTableDialog = (title, defaultName, callback) => {
 export const gerarTableRelatorio = () => {
   const sortedSelects = [...app.selects].sort((a, b) => {
     const order = ["REGULAR", "SEM PLACA", "SEM REGISTRO", "SEM SITUAÇÃO"];
-    const situacaoA = order.indexOf(a["SITUAÇÃO"] || "REGULAR");
-    const situacaoB = order.indexOf(b["SITUAÇÃO"] || "REGULAR");
+    const situacaoA = order.indexOf(a["SITUACAO"] || "REGULAR");
+    const situacaoB = order.indexOf(b["SITUACAO"] || "REGULAR");
     if (situacaoA !== situacaoB) return situacaoA - situacaoB;
     const numA = Number(a["NRPATRIMONIO1"]) || Infinity;
     const numB = Number(b["NRPATRIMONIO1"]) || Infinity;
@@ -207,8 +229,8 @@ export const gerarTableRelatorio = () => {
 export const gerarTableTermo = () => {
   const sortedSelects = [...app.selects].sort((a, b) => {
     const order = ["REGULAR", "SEM PLACA", "SEM REGISTRO", "SEM SITUAÇÃO"];
-    const situacaoA = order.indexOf(a["SITUAÇÃO"] || "REGULAR");
-    const situacaoB = order.indexOf(b["SITUAÇÃO"] || "REGULAR");
+    const situacaoA = order.indexOf(a["SITUACAO"] || "REGULAR");
+    const situacaoB = order.indexOf(b["SITUACAO"] || "REGULAR");
     if (situacaoA !== situacaoB) return situacaoA - situacaoB;
     const numA = Number(a["NRPATRIMONIO1"]) || Infinity;
     const numB = Number(b["NRPATRIMONIO1"]) || Infinity;
@@ -268,6 +290,8 @@ const copyToClipboard = (htmlContent) => {
 };
 
 export const gerarTable = (data) => {
+  if (!data || data.length === 0) return "<table></table>";
+
   const tableHTML = `<table border="1" cellpadding="1" cellspacing="1" style="width:100%;" align="center"><thead><tr>${Object.keys(
     data[0]
   )
@@ -280,7 +304,6 @@ export const gerarTable = (data) => {
           .join("")}</tr>`
     )
     .join("")}</tbody></table>`;
-  navigator.clipboard.writeText(tableHTML);
   return tableHTML;
 };
 
@@ -331,14 +354,41 @@ try {
         }
         return e;
       }) || [];
-    app.selected = dt.selected || {};
+    Object.assign(app.selected, {
+      id: uuidv4(),
+      NRPATRIMONIO1: "",
+      DESCRICAO: "",
+      LOCALIZACAO: "",
+      ESTADO: "",
+      OBSERVACAO: "",
+      SITUACAO: "SEM PLACA",
+      UPDATED: "",
+      VALOR: "",
+      ...(dt.selected || {}),
+    });
+    Object.assign(app.selected_db, {
+      id: null,
+      NRPATRIMONIO1: "",
+      DESCRICAO: "",
+      LOCALIZACAO: "",
+      ESTADO: "",
+      OBSERVACAO: "",
+      SITUACAO: "",
+      UPDATED: "",
+      VALOR: "",
+      ...(dt.selected_db || {}),
+    });
+
     app.values = [...(dt.values || [])].map((e) => {
       if (!e.id) e.id = uuidv4();
       return e;
     });
     app.fileName = dt.fileName || "";
     app.session = dt.session || "";
+  } else {
+    app.values = [];
   }
 } catch (error) {
   console.log("Erro ao carregar dados localStorage: ", error);
+  app.values = [];
 }
