@@ -1,60 +1,51 @@
 <template>
-  <div class="container">
+  <div class="container q-pa-md">
     <q-form @submit.prevent="submitForm">
-      <div class="q-pa-md row flex items-center q-gutter-md">
+      <div class="row flex items-center q-gutter-md q-mb-md">
         <div class="column items-center">
-          <small style="position: absolute;top: 15px;">BASE DE DADOS</small>
+          <small>BASE DE DADOS</small>
           <router-link to="/settings">
-            <q-chip> {{ app?.values?.length || 0 }} registros </q-chip>
+            <q-chip clickable>
+              {{ app?.values?.length || 0 }} registros
+            </q-chip>
           </router-link>
         </div>
         <div class="column items-center">
-          <small style="position: absolute;top: 15px;">VERIFICADOS</small>
+          <small>VERIFICADOS</small>
           <a href="#show-tables" @click.prevent="scrollToShowTables">
-            <q-chip> {{ app?.selects?.length }} registros </q-chip>
+            <q-chip clickable>
+              {{ app?.selects?.length || 0 }} registros
+            </q-chip>
           </a>
         </div>
       </div>
 
-      <InputFixed tipo="number" :textSelect="true" v-model="form.npat" :label1="'NPAT ' + getLabelNpat" />
-
+      <InputFixed v-model="npatInput" :label1="'NPAT ' + getLabelNpat" type="number" :text-select="true" />
       <InputFixed v-model="app.selected.DESCRICAO" label1="Descrição" />
-
-      <InputFixed v-model="app.selected.LOCALIZAÇÃO" label1="Local" />
-
+      <InputFixed v-model="app.selected.LOCALIZACAO" label1="Local" />
       <InputFixed v-model="app.selected.ESTADO" label1="Estado" />
-
-      <InputFixed v-model="app.selected.OBSERVAÇÃO" label1="Observação" />
+      <InputFixed v-model="app.selected.OBSERVACAO" label1="Observação" />
 
       <div class="row q-mt-sm q-gutter-md">
-        <div class="">
-          <q-btn color="green-9" type="button" icon="send" label="Adicionar" @click="submitForm" />
-        </div>
-        <div class="">
-          <q-btn color="yellow-9" type="button" icon="close" label="Cancelar"
-            v-show="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZAÇÃO" @click="clearForm" />
-        </div>
+        <q-btn :color="isUpdating ? 'blue-9' : 'green-9'" type="submit" :icon="isUpdating ? 'edit' : 'send'"
+          :label="isUpdating ? 'Atualizar' : 'Adicionar'" />
+        <q-btn v-if="app.selected.NRPATRIMONIO1 || app.selected.LOCALIZACAO" color="yellow-9" type="button" icon="close"
+          label="Cancelar" @click="clearForm" />
       </div>
 
-      <div class="row center q-mt-lg">
-        <div class="col">
-          <q-btn flat class="col-2 col-sm-6" icon="description" label="CSV" type="button"
-            @click="gerarCSV(app.selects)" />
-        </div>
-        <div class="col">
-          <q-btn flat class="col-2 col-sm-2" icon="code" label="Relatório" @click.prevent="gerarTableRelatorio" />
-        </div>
-        <div class="col">
-          <q-btn flat class="col-3 col-sm-4" icon="code" label="Termo" type="button" @click="gerarTableTermo" />
-        </div>
-        <div class="col" v-show="app.selects?.length">
-          <q-btn flat class="col-3 col-sm-4" icon="clear" label="Limpar" type="button" @click="limparTabela" />
-        </div>
+      <div class="row center q-mt-lg q-gutter-x-md">
+        <q-btn flat icon="description" label="CSV" type="button" @click="gerarCSV(app.selects)" />
+        <q-btn flat icon="code" label="Relatório" @click.prevent="gerarTableRelatorio" />
+        <q-btn flat icon="code" label="Termo" type="button" @click="gerarTableTermo" />
+        <q-btn v-if="app.selects?.length" flat icon="clear" label="Limpar" type="button" @click="limparTabela" />
       </div>
     </q-form>
-    <ShowTables id="show-tables" :tableData="app.selects" :headers="app.colunas" @remove="handleRemoveTable"
-      @clicked="handleClickedTable" :reverse="true" />
-    Itens selecionados: {{ app.selects.length }}
+
+    <hr class="q-my-md" />
+
+    <ShowTables id="show-tables" :table-data="app.selects" :headers="app.colunas" @remove="handleRemoveTable"
+      @clicked="handleClickedTable" :reverse="true" :editing-row-id="editingRowId" />
+    <p>Itens selecionados: {{ app.selects.length }}</p>
   </div>
 </template>
 
@@ -63,7 +54,6 @@ import { computed, ref, watch } from "vue";
 import ShowTables from "src/components/ShowTables.vue";
 import InputFixed from "src/components/InputFixed.vue";
 import { v4 as uuidv4 } from "uuid";
-import { debounce } from "lodash";
 import {
   app,
   gerarCSV,
@@ -75,85 +65,75 @@ import {
   selectedReset,
 } from "src/boot/app";
 
-const form = ref({
-  npat: "",
-  search1: "",
-  search2: "",
-  searchSelecteds: "",
-  searchColumn: "",
+const npatInput = ref("");
+const editingRowId = ref(null);
+
+const isUpdating = computed(() => {
+  return app.selected.id && app.selects.some(item => item.id === app.selected.id);
 });
 
 const clearForm = () => {
   selectedReset();
-  form.value.npat = "";
+  npatInput.value = "";
+  editingRowId.value = null;
 };
 
 const submitForm = () => {
   saveItemSelected();
-  form.value.npat = "";
+  npatInput.value = "";
   selectedReset();
+  editingRowId.value = null;
   saveData();
 };
 
 const handleClickedTable = (row) => {
   const item = app.selects.find((e) => e.id === row.id);
   if (item) {
-    form.value.npat = item.NRPATRIMONIO1;
-
+    editingRowId.value = item.id;
+    npatInput.value = item.NRPATRIMONIO1;
     setTimeout(() => {
-      app.selected.id = item.id;
-      app.selected.NRPATRIMONIO1 = item.NRPATRIMONIO1;
-      app.selected.DESCRICAO = item.DESCRICAO || "";
-      app.selected.LOCALIZAÇÃO = item.LOCALIZAÇÃO || "";
-      app.selected.ESTADO = item.ESTADO || "";
-      app.selected.OBSERVAÇÃO = item.OBSERVAÇÃO || "";
-      app.selected.VALOR = item.VALOR || "";
-    }, 1000);
+      Object.assign(app.selected, {
+        id: item.id,
+        NRPATRIMONIO1: item.NRPATRIMONIO1,
+        DESCRICAO: item.DESCRICAO || "",
+        LOCALIZACAO: item.LOCALIZACAO || "",
+        ESTADO: item.ESTADO || "",
+        OBSERVACAO: item.OBSERVACAO || "",
+        VALOR: item.VALOR || "",
+      });
+    }, 100);
   }
 };
 
 const handleRemoveTable = (index) => {
   app.selects = app.selects.filter((e) => e.id !== index.id);
+  editingRowId.value = null;
   saveData();
 };
 
 const getLabelNpat = computed(() =>
-  ["SEM PLACA"].includes(app.selected.SITUAÇÃO) ? "" : app.selected.SITUAÇÃO
+  app.selected.SITUACAO === "SEM PLACA" ? "" : app.selected.SITUACAO
 );
 
-watch(
-  () => form.value.npat,
-  () => {
-    try {
-      selectedReset();
-      app.selected.NRPATRIMONIO1 = form.value.npat;
-      const item = app.values?.find(
-        (e) => e.NRPATRIMONIO1 === String(form.value.npat)
-      );
-      if (item) {
-        Object.assign(app.selected, {
-          id: item.id || uuidv4(),
-          DESCRICAO: item.DESCRICAO || "",
-          LOCALIZAÇÃO: item.LOCALIZAÇÃO || "",
-          ESTADO: item.DESC_ESTADO || "",
-          OBSERVAÇÃO: item.OBSERVAÇÃO || "",
-          VALOR: item.VALOR || "",
-        });
-      }
-      if (!form.value.npat) {
-        app.selected.SITUAÇÃO = "SEM PLACA";
-      } else if (item) {
-        app.selected.SITUAÇÃO = "REGULAR";
-      } else {
-        app.selected.SITUAÇÃO = "SEM REGISTRO";
-      }
-    } catch (_error) {
-      console.log("npat: ", _error);
-      selectedReset();
-    }
-  },
-  { immediate: true }
-);
+const searchPatrimonio = (npat) => {
+  selectedReset();
+  app.selected.NRPATRIMONIO1 = npat;
+  const item = app.values?.find((e) => e.NRPATRIMONIO1 === String(npat));
+
+  if (item) {
+    Object.assign(app.selected, {
+      id: item.id || uuidv4(),
+      DESCRICAO: item.DESCRICAO || "",
+      LOCALIZACAO: item.LOCALIZACAO || "",
+      ESTADO: item.DESC_ESTADO || "",
+      OBSERVACAO: item.OBSERVACAO || "",
+      VALOR: item.VALOR || "",
+      SITUACAO: "REGULAR",
+    });
+  } else {
+    app.selected.SITUACAO = npat ? "SEM REGISTRO" : "SEM PLACA";
+  }
+};
 
 const scrollToShowTables = () => {
   const element = document.getElementById("show-tables");
@@ -162,16 +142,9 @@ const scrollToShowTables = () => {
   }
 };
 
-
-const selectAll = (event) => {
-  event.target.select();
-};
-
-try {
-  form.value.npat = null;
-} catch (error) {
-  console.log("Erro ao carregar dados localStorage: ", error);
-}
+watch(npatInput, (newValue) => {
+  searchPatrimonio(newValue);
+});
 </script>
 
 <style scoped lang="scss">

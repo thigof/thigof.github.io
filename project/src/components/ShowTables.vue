@@ -10,7 +10,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, index) in getDataTable()" :key="index" @click="click(row)">
+        <tr v-for="(row, index) in getDataTable()" :key="index" @click="click(row)"
+          :class="{ 'editing-row': row.id === editingRowId }">
           <td v-for="header in headers" :key="header.field">
             {{ row[header.field] }}
           </td>
@@ -21,8 +22,9 @@
       </tbody>
     </table>
   </div>
-  <div v-else class=" row card-grid">
-    <div v-for="(row, index) in getDataTable()" :key="index" class="card" @click="click(row)">
+  <div v-else class="row card-grid">
+    <div v-for="(row, index) in getDataTable()" :key="index" class="card"
+      :class="{ 'editing-row': row.id === editingRowId }" @click="click(row)">
       <div v-for="{ field, label } in headers" :key="field">
         <strong>{{ label }}:</strong> {{ row[field] }}
       </div>
@@ -34,6 +36,7 @@
 </template>
 
 <script setup>
+import { defineProps, defineEmits } from "vue";
 import { QBtn } from "quasar";
 
 const props = defineProps({
@@ -44,6 +47,10 @@ const props = defineProps({
   tableData: {
     type: Array,
     required: true,
+  },
+  editingRowId: { // Nova prop para o ID da linha em edição
+    type: [String, null],
+    default: null,
   },
 });
 const emit = defineEmits(["remove", "clicked"]);
@@ -72,17 +79,17 @@ const remove = (row) => {
 
 table {
   border-collapse: collapse;
+}
 
-  th,
-  td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
+table th,
+table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
 
-  th {
-    background-color: #f4f4f4;
-  }
+table th {
+  background-color: #f4f4f4;
 }
 
 .card-grid {
@@ -107,5 +114,10 @@ table {
   .table {
     display: none;
   }
+}
+
+/* Novo estilo para a linha em edição */
+.editing-row {
+  border: 2px solid red !important;
 }
 </style>
