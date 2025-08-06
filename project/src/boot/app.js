@@ -77,7 +77,9 @@ export const saveItemSelected = () => {
   itemToSave.UPDATED = new Date();
 
   // 2. Procura o item existente pelo ID único
-  const existingIndex = app.selects.findIndex(e => e.NRPATRIMONIO1 === itemToSave.NRPATRIMONIO1);
+  const existingIndex = app.selects.findIndex(
+    (e) => e.NRPATRIMONIO1 === itemToSave.NRPATRIMONIO1
+  );
 
   if (existingIndex !== -1) {
     // 3. Se o item existe, atualiza ele diretamente na sua posição original
@@ -106,7 +108,10 @@ export const handleFileUpload = (event) => {
     app.values = result.data.map((e) =>
       Object.keys(e).reduce(
         (acc, key) => {
-          const newKey = key.trim().replace("LOCALIZAÇÃO", "LOCALIZACAO").replace("OBSERVAÇÃO", "OBSERVACAO");
+          const newKey = key
+            .trim()
+            .replace("LOCALIZAÇÃO", "LOCALIZACAO")
+            .replace("OBSERVAÇÃO", "OBSERVACAO");
           if (newKey) acc[newKey] = e[key];
           return acc;
         },
@@ -182,7 +187,6 @@ const gerarTableHTML = (sortedSelects) => {
       NPAT: e["NRPATRIMONIO1"] || "",
       Descrição: e["DESCRICAO"] || "",
       Local: e["LOCALIZACAO"] || "",
-      Estado: e["SITUACAO"] || "",
       Valor: e["VALOR"] || "",
     }));
     htmlContent += gerarTable(data);
@@ -205,21 +209,27 @@ const gerarTableDialog = (title, defaultName, callback) => {
 };
 
 export const gerarTableRelatorio = () => {
-  const sortedSelects = [...app.selects].sort((a, b) => {
-    const order = ["REGULAR", "SEM PLACA", "SEM REGISTRO", "SEM SITUAÇÃO"];
-    const situacaoA = order.indexOf(a["SITUACAO"] || "REGULAR");
-    const situacaoB = order.indexOf(b["SITUACAO"] || "REGULAR");
-    if (situacaoA !== situacaoB) return situacaoA - situacaoB;
-    const numA = Number(a["NRPATRIMONIO1"]) || Infinity;
-    const numB = Number(b["NRPATRIMONIO1"]) || Infinity;
-    return numA - numB;
-  });
-
   gerarTableDialog("Salvar Relatório", "Relatório ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
 
-    const htmlContent = gerarTableHTML(sortedSelects);
+    const groupedData = [...app.selects].reduce((acc, item) => {
+      const situacao = item["SITUACAO"] || "REGULAR";
+      if (!acc[situacao]) acc[situacao] = [];
+      acc[situacao].push(item);
+      return acc;
+    }, {});
+
+    let htmlContent = "";
+    for (const [situacao, items] of Object.entries(groupedData)) {
+      htmlContent += `<h3>${situacao}</h3>`;
+      const data = items.map((e) => ({
+        NPAT: e["NRPATRIMONIO1"] || "",
+        Descrição: e["DESCRICAO"] || "",
+        Local: e["LOCALIZACAO"] || "",
+      }));
+      htmlContent += gerarTable(data);
+    }
     const htmlWithButton = addCopyButton(htmlContent);
     downloadHTML(htmlWithButton, fullName);
     copyToClipboard(htmlContent);
@@ -227,21 +237,31 @@ export const gerarTableRelatorio = () => {
 };
 
 export const gerarTableTermo = () => {
-  const sortedSelects = [...app.selects].sort((a, b) => {
-    const order = ["REGULAR", "SEM PLACA", "SEM REGISTRO", "SEM SITUAÇÃO"];
-    const situacaoA = order.indexOf(a["SITUACAO"] || "REGULAR");
-    const situacaoB = order.indexOf(b["SITUACAO"] || "REGULAR");
-    if (situacaoA !== situacaoB) return situacaoA - situacaoB;
-    const numA = Number(a["NRPATRIMONIO1"]) || Infinity;
-    const numB = Number(b["NRPATRIMONIO1"]) || Infinity;
-    return numA - numB;
-  });
-
   gerarTableDialog("Salvar Termo", "Termo ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
 
-    const htmlContent = gerarTableHTML(sortedSelects);
+    const groupedData = [...app.selects]
+      .filter((item) => item["SITUACAO"] === "REGULAR")
+      .reduce((acc, item) => {
+        const situacao = item["SITUACAO"] || "REGULAR";
+        if (!acc[situacao]) acc[situacao] = [];
+        acc[situacao].push(item);
+        return acc;
+      }, {});
+
+    let htmlContent = "";
+    for (const [situacao, items] of Object.entries(groupedData)) {
+      htmlContent += `<h3>${situacao}</h3>`;
+      const data = items.map((e) => ({
+        NPAT: e["NRPATRIMONIO1"] || "",
+        Descrição: e["DESCRICAO"] || "",
+        Local: e["LOCALIZACAO"] || "",
+        Valor: e["VALOR"] || "",
+        Estado: e["SITUACAO"] || "",
+      }));
+      htmlContent += gerarTable(data);
+    }
     const htmlWithButton = addCopyButton(htmlContent);
     downloadHTML(htmlWithButton, fullName);
     copyToClipboard(htmlContent);
