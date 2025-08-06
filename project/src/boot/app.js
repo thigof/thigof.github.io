@@ -172,28 +172,6 @@ export function gerarCSV(data, filename = "", separator = "\t") {
   });
 }
 
-const gerarTableHTML = (sortedSelects) => {
-  const groupedData = sortedSelects.reduce((acc, item) => {
-    const situacao = item["SITUACAO"] || "REGULAR";
-    if (!acc[situacao]) acc[situacao] = [];
-    acc[situacao].push(item);
-    return acc;
-  }, {});
-
-  let htmlContent = "";
-  for (const [situacao, items] of Object.entries(groupedData)) {
-    htmlContent += `<h3>${situacao}</h3>`;
-    const data = items.map((e) => ({
-      NPAT: e["NRPATRIMONIO1"] || "",
-      Descrição: e["DESCRICAO"] || "",
-      Local: e["LOCALIZACAO"] || "",
-      Valor: e["VALOR"] || "",
-    }));
-    htmlContent += gerarTable(data);
-  }
-  return htmlContent;
-};
-
 const gerarTableDialog = (title, defaultName, callback) => {
   Dialog.create({
     title,
@@ -226,6 +204,7 @@ export const gerarTableRelatorio = () => {
       const data = items.map((e) => ({
         NPAT: e["NRPATRIMONIO1"] || "",
         Descrição: e["DESCRICAO"] || "",
+        Estado: e["SITUACAO"] || "",
         Local: e["LOCALIZACAO"] || "",
       }));
       htmlContent += gerarTable(data);
@@ -240,6 +219,9 @@ export const gerarTableTermo = () => {
   gerarTableDialog("Salvar Termo", "Termo ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const fullName = `${datePrefix}-${name}.html`;
+
+    console.log("Dados para o termo: ", app.selects);
+
 
     const groupedData = [...app.selects]
       .filter((item) => item["SITUACAO"] === "REGULAR")
@@ -257,6 +239,7 @@ export const gerarTableTermo = () => {
         NPAT: e["NRPATRIMONIO1"] || "",
         Descrição: e["DESCRICAO"] || "",
         Local: e["LOCALIZACAO"] || "",
+        Setor: e["NOME_SETOR"] || "",
         Valor: e["VALOR"] || "",
         Estado: e["SITUACAO"] || "",
       }));
