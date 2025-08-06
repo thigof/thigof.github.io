@@ -189,7 +189,9 @@ const gerarTableDialog = (title, defaultName, callback) => {
 export const gerarTableRelatorio = () => {
   gerarTableDialog("Salvar Relatório", "Relatório ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const fullName = `${datePrefix}-${name}.html`;
+    const fullName = `${datePrefix}-${name.trim()}.html`;
+
+    console.log("Dados para o relátorio: ", app.selects);
 
     const groupedData = [...app.selects].reduce((acc, item) => {
       const situacao = item["SITUACAO"] || "REGULAR";
@@ -204,7 +206,7 @@ export const gerarTableRelatorio = () => {
       const data = items.map((e) => ({
         NPAT: e["NRPATRIMONIO1"] || "",
         Descrição: e["DESCRICAO"] || "",
-        Estado: e["SITUACAO"] || "",
+        Estado: e["ESTADO"] || "",
         Local: e["LOCALIZACAO"] || "",
       }));
       htmlContent += gerarTable(data);
@@ -218,10 +220,9 @@ export const gerarTableRelatorio = () => {
 export const gerarTableTermo = () => {
   gerarTableDialog("Salvar Termo", "Termo ", (name) => {
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const fullName = `${datePrefix}-${name}.html`;
+    const fullName = `${datePrefix}-${name.trim()}.html`;
 
     console.log("Dados para o termo: ", app.selects);
-
 
     const groupedData = [...app.selects]
       .filter((item) => item["SITUACAO"] === "REGULAR")
@@ -241,7 +242,7 @@ export const gerarTableTermo = () => {
         Local: e["LOCALIZACAO"] || "",
         Setor: e["NOME_SETOR"] || "",
         Valor: e["VALOR"] || "",
-        Estado: e["SITUACAO"] || "",
+        Estado: e["ESTADO"] || "",
       }));
       htmlContent += gerarTable(data);
     }
