@@ -240,7 +240,6 @@ export const gerarTableTermo = () => {
         NPAT: e["NRPATRIMONIO1"] || "",
         Descrição: e["DESCRICAO"] || "",
         Local: e["LOCALIZACAO"] || "",
-        Setor: e["NOME_SETOR"] || "",
         Valor: e["VALOR"] || "",
         Estado: e["ESTADO"] || "",
       }));
