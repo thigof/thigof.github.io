@@ -77,9 +77,9 @@ export const saveItemSelected = () => {
   itemToSave.UPDATED = new Date();
 
   // 2. Procura o item existente pelo ID único
-  const existingIndex = app.selects.findIndex(
-    (e) => e.NRPATRIMONIO1 === itemToSave.NRPATRIMONIO1
-  );
+  const existingIndex = app.selects.findIndex((e) => e.id === itemToSave.id);
+
+  console.log("Índice existente encontrado: ", itemToSave, existingIndex);
 
   if (existingIndex !== -1) {
     // 3. Se o item existe, atualiza ele diretamente na sua posição original
