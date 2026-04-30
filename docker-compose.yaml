@@ -1,0 +1,56 @@
+services:
+  gateway:
+    image: caddy:latest
+    container_name: pb_gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
+  pocketbase:
+    build: 
+      context: ./backend
+      args:
+        - PB_VERSION=0.37.4
+    container_name: pb_backend
+    restart: unless-stopped
+    # Não precisamos de ports: aqui pois o Caddy acessa via rede interna
+    volumes:
+      - ./backend/pb_data:/pb/pb_data
+      - ./backend/pb_public:/pb/pb_public
+    healthcheck:
+      test: ["CMD-SHELL", "/pb/pocketbase health --dir=/pb/pb_data"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    container_name: pb_frontend
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_PB_URL=http://api.localhost
+      - NODE_ENV=development
+      - TZ=America/Sao_Paulo
+    entrypoint: ["/bin/sh", "./entrypoint.sh"]
+    stdin_open: true
+    tty: true
+    # Se o seu front roda na 9000, o Caddy vai apontar para ela abaixo
+
+volumes:
+  caddy_data:
+  caddy_config:

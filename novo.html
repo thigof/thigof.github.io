@@ -1,0 +1,2915 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>NPAT CONTROL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #f0efea;
+        --surface: #fff;
+        --s2: #f7f6f2;
+        --border: #e2e0d8;
+        --bstrong: #c8c6bc;
+        --text: #1a1917;
+        --muted: #6b6a65;
+        --hint: #9e9c96;
+        --primary: #1a1917;
+        --accent: #2d5be3;
+        --accent2: #1e46c7;
+        --danger: #c0392b;
+        --success: #1b6b3a;
+        --sbg: #edf7f1;
+        --sborder: #a8d9bb;
+        --dbg: #fdf0ee;
+        --dborder: #eeb5ae;
+        --info: #1a4faa;
+        --ibg: #edf2fd;
+        --iborder: #a8c0f0;
+        --r: 6px;
+        --rm: 10px;
+        --rl: 14px;
+        --sans: "IBM Plex Sans", system-ui, sans-serif;
+        --mono: "IBM Plex Mono", monospace;
+      }
+
+      /* ── FIX #3: layout fixo — nada rola fora das zonas designadas ── */
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        font-family: var(--sans);
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.5;
+      }
+      #root {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      input,
+      select {
+        outline: none;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      /* header fixo, nunca rola */
+      .header {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        height: 50px;
+        background: var(--primary);
+        z-index: 100;
+      }
+      .brand {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+      }
+      .nav-btn {
+        padding: 5px 12px;
+        border-radius: var(--r);
+        border: 1px solid transparent;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .nav-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .nav-btn.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+      .nav-sep {
+        width: 1px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.15);
+        margin: 0 4px;
+        flex-shrink: 0;
+      }
+      .btn-exp {
+        padding: 5px 12px;
+        border-radius: var(--r);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .btn-exp:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      /* área de conteúdo — expande, sem scroll global */
+      .main {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ── CONFERÊNCIA: layout fixo em duas zonas ── */
+      .conf-host {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .conf-layout {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        max-width: 1060px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 14px 14px 0;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      /* zona superior: painel de consulta — tamanho fixo, não rola */
+      .conf-top {
+        flex-shrink: 0;
+        min-width: 0;
+      }
+
+      /* zona inferior: tabela — cresce e rola internamente */
+      .conf-bottom {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--rl) var(--rl) 0 0;
+        overflow: hidden;
+      }
+      .conf-bottom-head {
+        flex-shrink: 0;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--border);
+      }
+      /* scroll confinado à tabela ou lista de cards */
+      .conf-bottom-scroll {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+      }
+
+      /* ── BASE e CONFIG: rolagem da própria aba ── */
+      .tab-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 14px 40px;
+      }
+      .tab-container {
+        max-width: 1060px;
+        margin: 0 auto;
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      /* ── PANELS ── */
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--rl);
+        padding: 16px 18px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .ptitle {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      /* ── FIELDS ── */
+      .field {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+      .field label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .field input,
+      .field select {
+        height: 36px;
+        padding: 0 11px;
+        border: 1px solid var(--border);
+        border-radius: var(--rm);
+        background: var(--surface);
+        color: var(--text);
+        transition: border-color 0.15s;
+        width: 100%;
+        min-width: 0;
+      }
+      .field input:focus,
+      .field select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(45, 91, 227, 0.08);
+      }
+      .field input::placeholder {
+        color: var(--hint);
+      }
+
+      /* ── BUTTONS ── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 14px;
+        height: 36px;
+        border-radius: var(--rm);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.15s;
+        flex-shrink: 0;
+      }
+      .btn:hover {
+        background: var(--s2);
+        border-color: var(--bstrong);
+      }
+      .btn-accent {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .btn-accent:hover {
+        background: var(--accent2);
+        border-color: var(--accent2);
+      }
+      .btn-accent:disabled {
+        background: var(--bstrong);
+        border-color: var(--bstrong);
+        cursor: default;
+        opacity: 0.7;
+      }
+      .btn-ghost {
+        background: transparent;
+        border-color: transparent;
+        color: var(--muted);
+      }
+      .btn-ghost:hover {
+        background: var(--s2);
+        border-color: var(--border);
+        color: var(--text);
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: #fff;
+        border-color: var(--danger);
+      }
+      .btn-danger:hover {
+        background: #a93226;
+        border-color: #a93226;
+      }
+      .btn-neutral {
+        background: var(--bstrong);
+        color: var(--text);
+        border-color: var(--bstrong);
+      }
+      .btn-neutral:hover {
+        background: #b0aea5;
+      }
+      .btn-sm {
+        height: 26px;
+        padding: 0 10px;
+        font-size: 11px;
+        border-radius: var(--r);
+      }
+
+      /* ── CONSULT HERO ── */
+      .consult-hero {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        margin-bottom: 12px;
+        border-radius: var(--rl);
+        overflow: hidden;
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 4px rgba(45, 91, 227, 0.1);
+      }
+      .consult-npat {
+        flex: 1;
+        min-width: 0;
+      }
+      .consult-npat input {
+        width: 100%;
+        height: 52px;
+        padding: 0 16px;
+        border: none;
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .consult-npat input:focus {
+        outline: none;
+        box-shadow: none;
+      }
+      .consult-npat input::placeholder {
+        color: var(--hint);
+        font-size: 16px;
+        font-weight: 400;
+        letter-spacing: 0;
+      }
+      .btn-add-hero {
+        height: 52px;
+        padding: 0 22px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        font-size: 22px;
+        font-weight: 700;
+        transition: background 0.15s;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-add-hero:hover {
+        background: var(--accent2);
+      }
+      .btn-add-hero:disabled {
+        background: var(--bstrong);
+        cursor: default;
+        opacity: 0.5;
+      }
+
+      /* ── RESULT CARD ── */
+      .rcard {
+        border: 1px solid var(--border);
+        border-radius: var(--rm);
+        background: var(--s2);
+        min-width: 0;
+        overflow: hidden;
+      }
+      .rcard-empty {
+        padding: 18px 16px;
+        color: var(--hint);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .rcard-inner {
+        padding: 14px 16px;
+        width: 100%;
+        min-width: 0;
+      }
+      .rcard-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .rcard-npat {
+        font-family: var(--mono);
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .rcard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px 14px;
+        margin-bottom: 12px;
+      }
+      .rfield {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+      .rfield-lbl {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--hint);
+      }
+      .rfield-val {
+        font-size: 13px;
+        font-weight: 500;
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+      .rfield-inp {
+        width: 100%;
+        height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 13px;
+        transition: border-color 0.15s;
+      }
+      .rfield-inp:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(45, 91, 227, 0.08);
+      }
+      .rfield-inp::placeholder {
+        color: var(--hint);
+      }
+      .rfield-sel {
+        width: 100%;
+        height: 34px;
+        padding: 0 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 13px;
+      }
+      .rfield-sel:focus {
+        border-color: var(--accent);
+      }
+      .rcard-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 10px 0;
+      }
+      .rcard-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      /* ── FIX #1: LOCK inline — campo + cadeado unidos ── */
+      .lock-wrap {
+        display: flex;
+        align-items: stretch;
+        min-width: 0;
+        border-radius: var(--r);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        transition: border-color 0.15s;
+      }
+      .lock-wrap:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(45, 91, 227, 0.08);
+      }
+      .lock-wrap.is-locked {
+        border-color: var(--iborder);
+        background: var(--ibg);
+      }
+      .lock-inp {
+        flex: 1;
+        height: 34px;
+        padding: 0 10px;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+        min-width: 0;
+      }
+      .lock-inp:focus {
+        outline: none;
+        box-shadow: none;
+      }
+      .lock-inp::placeholder {
+        color: var(--hint);
+      }
+      .lock-inp:disabled {
+        font-family: var(--mono);
+        font-weight: 600;
+        color: var(--info);
+        cursor: default;
+      }
+      .lock-inp-sel {
+        flex: 1;
+        height: 34px;
+        padding: 0 8px;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+        min-width: 0;
+      }
+      .lock-inp-sel:focus {
+        outline: none;
+      }
+      .lock-btn {
+        flex-shrink: 0;
+        width: 36px;
+        height: 34px;
+        border: none;
+        border-left: 1px solid var(--border);
+        background: transparent;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .lock-btn:hover {
+        background: var(--s2);
+      }
+      .lock-wrap.is-locked .lock-btn {
+        border-left-color: var(--iborder);
+        background: transparent;
+      }
+      .lock-wrap.is-locked .lock-btn:hover {
+        background: rgba(26, 79, 170, 0.1);
+      }
+
+      /* ── MANUAL FORM ── */
+      .manual-inner {
+        padding: 14px 16px;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+      }
+      .manual-title {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+      .manual-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      /* ── BADGES ── */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        border: 1px solid;
+        flex-shrink: 0;
+      }
+      .b-regular {
+        background: var(--sbg);
+        color: var(--success);
+        border-color: var(--sborder);
+      }
+      .b-atualizar {
+        background: var(--ibg);
+        color: var(--info);
+        border-color: var(--iborder);
+      }
+      .b-irregular {
+        background: var(--dbg);
+        color: var(--danger);
+        border-color: var(--dborder);
+      }
+
+      /* ── SPILLS (filtros clicáveis) ── */
+      .summary-bar {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .spill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          opacity 0.15s,
+          transform 0.1s,
+          box-shadow 0.15s;
+        user-select: none;
+      }
+      .spill:hover {
+        opacity: 0.8;
+      }
+      .spill:active {
+        transform: scale(0.96);
+      }
+      .spill.active-filter {
+        box-shadow: 0 0 0 2px currentColor;
+      }
+      .spill-n {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .sp-total {
+        background: var(--s2);
+        border-color: var(--border);
+        color: var(--muted);
+      }
+      .sp-reg {
+        background: var(--sbg);
+        border-color: var(--sborder);
+        color: var(--success);
+      }
+      .sp-atu {
+        background: var(--ibg);
+        border-color: var(--iborder);
+        color: var(--info);
+      }
+      .sp-irr {
+        background: var(--dbg);
+        border-color: var(--dborder);
+        color: var(--danger);
+      }
+
+      /* ── DETAIL TAGS ── */
+      .dtag {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 9px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        padding: 1px 5px;
+        margin: 1px 1px 1px 0;
+        color: var(--muted);
+        overflow-wrap: break-word;
+        word-break: break-all;
+      }
+      .dtag-atu {
+        background: var(--ibg);
+        border-color: var(--iborder);
+        color: var(--info);
+      }
+      .dtag-irr {
+        background: var(--dbg);
+        border-color: var(--dborder);
+        color: var(--danger);
+      }
+
+      /* ── TABLE ── */
+      .table-wrap {
+        overflow-x: auto;
+        max-width: 100%;
+        min-width: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      thead th {
+        background: var(--s2);
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      tbody td {
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        max-width: 220px;
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover {
+        background: #fafaf8;
+      }
+      tbody tr.tr-atu {
+        background: #f5f8ff;
+      }
+      tbody tr.tr-irr {
+        background: #fff8f7;
+      }
+      .inline-inp {
+        width: 100%;
+        min-width: 60px;
+        height: 24px;
+        padding: 0 7px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 11px;
+      }
+      .inline-inp:focus {
+        border-color: var(--accent);
+      }
+      .inline-sel {
+        width: 100%;
+        height: 24px;
+        padding: 0 5px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 11px;
+      }
+      .inline-sel:focus {
+        border-color: var(--accent);
+      }
+
+      /* ── MOBILE CARDS ── */
+      /* card-list must NOT be display:block — it sits inside conf-bottom-scroll which already scrolls */
+      .card-list {
+        display: none;
+        padding: 8px 8px 16px;
+        min-width: 0;
+        box-sizing: border-box;
+      }
+      .icard {
+        border: 1px solid var(--border);
+        border-radius: var(--rm);
+        background: var(--surface);
+        margin-bottom: 8px;
+        max-width: 100%;
+      }
+      .icard.c-atu {
+        border-color: var(--iborder);
+      }
+      .icard.c-irr {
+        border-color: var(--dborder);
+      }
+      .ic-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        user-select: none;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .icard.c-atu .ic-summary {
+        background: #f5f8ff;
+      }
+      .icard.c-irr .ic-summary {
+        background: #fff8f7;
+      }
+      .ic-left {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+      }
+      .ic-npat {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .ic-desc {
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+      }
+      .ic-tags-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        margin-top: 2px;
+      }
+      .ic-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .ic-chev {
+        font-size: 10px;
+        color: var(--hint);
+        transition: transform 0.2s;
+        line-height: 1;
+      }
+      .icard.expanded .ic-chev {
+        transform: rotate(180deg);
+      }
+      .ic-body {
+        display: none;
+        padding: 10px 12px;
+        border-top: 1px solid var(--border);
+        gap: 8px;
+        min-width: 0;
+      }
+      .icard.expanded .ic-body {
+        display: grid;
+      }
+      .ic-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px 10px;
+        min-width: 0;
+      }
+      .ic-field {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+      .ic-field span {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--hint);
+      }
+      .ic-field strong {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--muted);
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+      .ic-inp {
+        width: 100%;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 12px;
+        min-width: 0;
+      }
+      .ic-sel {
+        width: 100%;
+        height: 28px;
+        padding: 0 7px;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 12px;
+        min-width: 0;
+      }
+      .ic-inp:focus,
+      .ic-sel:focus {
+        border-color: var(--accent);
+      }
+      .ic-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+      }
+
+      /* ── META ── */
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 1px;
+        border: 1px solid var(--border);
+        border-radius: var(--rm);
+        overflow: hidden;
+        background: var(--border);
+        margin-top: 10px;
+      }
+      .meta-cell {
+        background: var(--s2);
+        padding: 8px 10px;
+        min-width: 0;
+      }
+      .mc-label {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--hint);
+        margin-bottom: 3px;
+      }
+      .mc-val {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* ── BASE SEARCH — lista rola dentro do painel ── */
+      .sr-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--rm);
+        margin-top: 8px;
+      }
+      .sr-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 12px;
+        min-width: 0;
+      }
+      .sr-row:last-child {
+        border-bottom: none;
+      }
+      .sr-row:hover {
+        background: var(--s2);
+      }
+      .sr-check {
+        flex-shrink: 0;
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+      }
+      .sr-cells {
+        display: flex;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        cursor: pointer;
+      }
+      .sr-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .sr-cell-npat {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        width: 90px;
+      }
+      .sr-cell-flex {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* ── CONFIG ── */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .check-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 6px 16px;
+        margin-top: 8px;
+      }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 4px 0;
+      }
+      .check-item input {
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+
+      .parse-error {
+        font-size: 12px;
+        color: var(--danger);
+        background: var(--dbg);
+        border: 1px solid var(--dborder);
+        border-radius: var(--r);
+        padding: 8px 12px;
+        margin-top: 8px;
+      }
+      .toast {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        background: var(--primary);
+        color: #fff;
+        padding: 9px 14px;
+        border-radius: var(--rm);
+        font-size: 12px;
+        font-weight: 500;
+        z-index: 1000;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+        max-width: calc(100vw - 36px);
+      }
+      .dup-warn {
+        font-size: 11px;
+        color: var(--danger);
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      @media (max-width: 860px) {
+        .rcard-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 680px) {
+        .table-wrap {
+          display: none;
+        }
+        .card-list {
+          display: block;
+        }
+        /* conf-bottom-scroll needs explicit overflow when card-list is active */
+        .conf-bottom-scroll {
+          -webkit-overflow-scrolling: touch;
+        }
+      }
+      @media (max-width: 600px) {
+        .header {
+          padding: 0 10px;
+        }
+        .brand {
+          font-size: 12px;
+        }
+        .nav-btn {
+          padding: 5px 8px;
+          font-size: 11px;
+        }
+        .conf-layout {
+          padding: 10px 8px 0;
+          gap: 10px;
+        }
+        .panel {
+          padding: 12px 12px;
+        }
+        .consult-npat input {
+          font-size: 18px;
+        }
+        .rcard-grid {
+          grid-template-columns: 1fr;
+        }
+        .manual-grid {
+          grid-template-columns: 1fr;
+        }
+        .meta-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 400px) {
+        .consult-npat input {
+          font-size: 15px;
+        }
+        .btn-add-hero {
+          padding: 0 14px;
+          font-size: 16px;
+        }
+        .btn-exp {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+      const norm = (v) =>
+        String(v)
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim();
+      const esc = (v) =>
+        String(v)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+      const STORAGE = {
+        cfg: "npatcfg10",
+        items: "npatitems10",
+        csv: "npatcsv10", // ✅ NOVO
+      };
+      const DEF_CFG = {
+        mapping: { npat: "", descricao: "", local: "", estado: "", obs: "" },
+        lockLocal: "",
+        locked: false,
+        searchCols: [],
+      };
+      const ESTADOS = [
+        "Bom",
+        "Danificado",
+        "Inservível",
+        "Ocioso",
+        "Antieconômico",
+      ];
+
+      function validate(item, cfg) {
+        if (!item.encontrado) return { ...item, status: "irregular" };
+        const det = [];
+        const localObs = cfg.locked ? cfg.lockLocal.trim() : item.localAtual;
+        const localRef = item.localBase;
+        let div = false;
+        if (localRef && localObs && norm(localRef) !== norm(localObs)) {
+          det.push("LOCAL: " + localRef + " \u2192 " + localObs);
+          div = true;
+        }
+        if (
+          item.estadoBase &&
+          item.estadoAtual &&
+          norm(item.estadoBase) !== norm(item.estadoAtual)
+        ) {
+          det.push(
+            "ESTADO: " + item.estadoBase + " \u2192 " + item.estadoAtual,
+          );
+          div = true;
+        }
+        if (div)
+          return { ...item, status: "atualizar", detalhe: [...new Set(det)] };
+        return { ...item, status: "regular", detalhe: [] };
+      }
+
+      function parseCsvFile(file) {
+        return new Promise((res, rej) => {
+          Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            dynamicTyping: false,
+            encoding: "",
+            transformHeader: (h) => h.trim(),
+            transform: (v) => v.trim(),
+            complete: (r) => {
+              if (r.errors.length && r.data.length === 0) {
+                rej(r.errors[0].message);
+                return;
+              }
+              res({
+                headers: r.meta.fields || [],
+                rows: r.data,
+                errors: r.errors,
+                delimiter: r.meta.delimiter,
+              });
+            },
+            error: (e) => rej(e.message),
+          });
+        });
+      }
+
+      function autoMapHeaders(h) {
+        const f = (kws) =>
+          h.find((c) => kws.some((k) => norm(c).includes(k))) || "";
+        return {
+          npat: f(["nrpatrimonio", "npat", "patrimonio", "tombamento"]),
+          descricao: f(["descricao", "descri", "bem", "material", "nome"]),
+          local: f(["localizacao", "local", "ambiente", "sala"]),
+          estado: f(["desc_estado", "estado", "situacao", "conservacao"]),
+          obs: f(["observacao", "obs"]),
+        };
+      }
+
+      function defaultSearchCols(headers, mapping) {
+        const want = [
+          mapping.npat,
+          mapping.descricao,
+          mapping.local,
+          mapping.estado,
+        ].filter(Boolean);
+        const base = want.filter((h) => headers.includes(h));
+        return base.length ? base : headers.slice(0, 4);
+      }
+
+      function Badge({ status }) {
+        const m = {
+          regular: ["badge b-regular", "REGULAR"],
+          atualizar: ["badge b-atualizar", "ATUALIZAR"],
+          irregular: ["badge b-irregular", "IRREGULAR"],
+        };
+        const [cls, lbl] = m[status] || ["badge b-irregular", "IRREGULAR"];
+        return <span className={cls}>{lbl}</span>;
+      }
+
+      function ItemCard({ item, idx, localValues, onEdit, onRemove }) {
+        const [open, setOpen] = useState(false);
+        const cardCls =
+          "icard" +
+          (item.status === "atualizar"
+            ? " c-atu"
+            : item.status === "irregular"
+              ? " c-irr"
+              : "") +
+          (open ? " expanded" : "");
+        const tagCls =
+          item.status === "atualizar"
+            ? "dtag dtag-atu"
+            : item.status === "irregular"
+              ? "dtag dtag-irr"
+              : "dtag";
+        return (
+          <div className={cardCls}>
+            <div className="ic-summary" onClick={() => setOpen((o) => !o)}>
+              <div className="ic-left">
+                <span className="ic-npat">{item.npat || "—"}</span>
+                <span className="ic-desc" title={item.descricao}>
+                  {item.descricao || "—"}
+                </span>
+                {item.detalhe.length > 0 && (
+                  <div className="ic-tags-preview">
+                    {item.detalhe.map((d, i) => (
+                      <span key={i} className={tagCls}>
+                        {d}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="ic-right">
+                <Badge status={item.status} />
+                <span className="ic-chev">&#9660;</span>
+              </div>
+            </div>
+            {open && (
+              <div className="ic-body">
+                <div className="ic-grid">
+                  <div className="ic-field">
+                    <span>Local base</span>
+                    <strong>{item.localBase || "—"}</strong>
+                  </div>
+                  <div className="ic-field">
+                    <span>Local conferido</span>
+                    {localValues.length > 0 ? (
+                      <select
+                        className="ic-sel"
+                        value={item.localAtual}
+                        onChange={(e) =>
+                          onEdit(idx, "localAtual", e.target.value)
+                        }
+                      >
+                        <option value="">—</option>
+                        {localValues.map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        className="ic-inp"
+                        value={item.localAtual}
+                        placeholder="Local"
+                        onChange={(e) =>
+                          onEdit(idx, "localAtual", e.target.value)
+                        }
+                      />
+                    )}
+                  </div>
+                  <div className="ic-field">
+                    <span>Estado base</span>
+                    <strong>{item.estadoBase || "—"}</strong>
+                  </div>
+                  <div className="ic-field">
+                    <span>Est. conferido</span>
+                    <select
+                      className="ic-sel"
+                      value={item.estadoAtual}
+                      onChange={(e) =>
+                        onEdit(idx, "estadoAtual", e.target.value)
+                      }
+                    >
+                      <option value="">—</option>
+                      {ESTADOS.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="ic-field" style={{ gridColumn: "span 2" }}>
+                    <span>Observação</span>
+                    <input
+                      className="ic-inp"
+                      value={item.obs || ""}
+                      placeholder="Opcional"
+                      onChange={(e) => onEdit(idx, "obs", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="ic-footer">
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => onRemove(idx)}
+                  >
+                    Remover
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      function TableRow({ item, idx, localValues, onEdit, onRemove }) {
+        const cls =
+          item.status === "atualizar"
+            ? "tr-atu"
+            : item.status === "irregular"
+              ? "tr-irr"
+              : "";
+        const tagCls =
+          "dtag" +
+          (item.status === "atualizar"
+            ? " dtag-atu"
+            : item.status === "irregular"
+              ? " dtag-irr"
+              : "");
+        return (
+          <tr className={cls}>
+            <td>
+              <span
+                style={{
+                  fontFamily: "var(--mono)",
+                  fontSize: "11px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {item.npat || "—"}
+              </span>
+            </td>
+            <td style={{ maxWidth: 200 }}>{item.descricao || "—"}</td>
+            <td style={{ color: "var(--muted)", whiteSpace: "nowrap" }}>
+              {item.localBase || "—"}
+            </td>
+            <td>
+              {localValues.length > 0 ? (
+                <select
+                  className="inline-sel"
+                  value={item.localAtual}
+                  onChange={(e) => onEdit(idx, "localAtual", e.target.value)}
+                >
+                  <option value="">—</option>
+                  {localValues.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="inline-inp"
+                  value={item.localAtual}
+                  placeholder="Local"
+                  onChange={(e) => onEdit(idx, "localAtual", e.target.value)}
+                />
+              )}
+            </td>
+            <td style={{ color: "var(--muted)", whiteSpace: "nowrap" }}>
+              {item.estadoBase || "—"}
+            </td>
+            <td>
+              <select
+                className="inline-sel"
+                value={item.estadoAtual}
+                onChange={(e) => onEdit(idx, "estadoAtual", e.target.value)}
+              >
+                <option value="">—</option>
+                {ESTADOS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </td>
+            <td>
+              <Badge status={item.status} />
+            </td>
+            <td>
+              {item.detalhe.map((d, i) => (
+                <span key={i} className={tagCls}>
+                  {d}
+                </span>
+              ))}
+            </td>
+            <td>
+              <input
+                className="inline-inp"
+                value={item.obs || ""}
+                placeholder="Obs."
+                onChange={(e) => onEdit(idx, "obs", e.target.value)}
+              />
+            </td>
+            <td>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => onRemove(idx)}
+              >
+                ✕
+              </button>
+            </td>
+          </tr>
+        );
+      }
+
+      function Toast({ msg }) {
+        return msg ? (
+          <div
+            className="toast"
+            style={{ opacity: 1, transform: "translateY(0)" }}
+          >
+            {msg}
+          </div>
+        ) : null;
+      }
+
+      /* ═══════════ APP ═══════════════════════════════════════ */
+      function App() {
+        const [view, setView] = useState("conf");
+        const [csv, setCsv] = useState(() => {
+          try {
+            const c = localStorage.getItem(STORAGE.csv);
+            return c ? JSON.parse(c) : { headers: [], rows: [] };
+          } catch {
+            return { headers: [], rows: [] };
+          }
+        });
+        const [parseInfo, setParseInfo] = useState(null);
+        const [cfg, setCfg] = useState(() => {
+          try {
+            const c = localStorage.getItem(STORAGE.cfg);
+            return c ? { ...DEF_CFG, ...JSON.parse(c) } : DEF_CFG;
+          } catch {
+            return DEF_CFG;
+          }
+        });
+        const [items, setItems] = useState(() => {
+          try {
+            const i = localStorage.getItem(STORAGE.items);
+            return i ? JSON.parse(i) : [];
+          } catch {
+            return [];
+          }
+        });
+        const [current, setCurrent] = useState(null);
+        const [npat, setNpat] = useState("");
+        const [editLocal, setEditLocal] = useState("");
+        const [editEstado, setEditEstado] = useState("");
+        const [editObs, setEditObs] = useState("");
+        const [showManual, setShowManual] = useState(false);
+        const [manualDesc, setManualDesc] = useState("");
+        const [manualLocal, setManualLocal] = useState("");
+        const [manualEstado, setManualEstado] = useState("");
+        const [manualMotivo, setManualMotivo] = useState("sem_id");
+        const [genericTerm, setGenericTerm] = useState("");
+        const [genericCol, setGenericCol] = useState("");
+        const [genericResults, setGenericResults] = useState(null);
+        const [selectedRows, setSelectedRows] = useState(new Set());
+        const [rcardExpanded, setRcardExpanded] = useState(false);
+        const [fileMeta, setFileMeta] = useState(null);
+        const [toast, setToast] = useState("");
+        const [statusFilter, setStatusFilter] = useState(null);
+        /* FIX #1 - lock state: campo de texto livre para travar */
+        const [lockDraft, setLockDraft] = useState("");
+        const debounceRef = useRef(null);
+        const npatRef = useRef(null);
+
+        useEffect(() => {
+          localStorage.setItem(STORAGE.cfg, JSON.stringify(cfg));
+        }, [cfg]);
+        useEffect(() => {
+          localStorage.setItem(STORAGE.items, JSON.stringify(items));
+        }, [items]);
+        useEffect(() => {
+          localStorage.setItem(STORAGE.csv, JSON.stringify(csv));
+        }, [csv]);
+        useEffect(() => {
+          localStorage.setItem(STORAGE.csv, JSON.stringify(csv));
+        }, [csv]);
+        useEffect(() => {
+          setRcardExpanded(false);
+        }, [current]);
+        const showToast = useCallback((msg) => {
+          setToast(msg);
+          setTimeout(() => setToast(""), 2400);
+        }, []);
+
+        const localValues = useMemo(() => {
+          if (!cfg.mapping.local || !csv.rows.length) return [];
+          return [
+            ...new Set(
+              csv.rows
+                .map((r) => String(r[cfg.mapping.local] || "").trim())
+                .filter(Boolean),
+            ),
+          ].sort();
+        }, [csv, cfg.mapping.local]);
+
+        const filteredItems = useMemo(
+          () =>
+            statusFilter
+              ? items.filter((i) => i.status === statusFilter)
+              : items,
+          [items, statusFilter],
+        );
+
+        /* FIX #2 - conjunto de NPATs já na lista */
+        const npatSet = useMemo(
+          () => new Set(items.map((i) => i.npat).filter(Boolean)),
+          [items],
+        );
+
+        function toggleFilter(s) {
+          setStatusFilter((f) => (f === s ? null : s));
+        }
+
+        /* FIX #1 - toggleLock: usa lockDraft (quando sem localValues) ou editLocal (quando select) */
+        function toggleLock() {
+          if (cfg.locked) {
+            /* destravar: preserva o valor visível no draft para edição */
+            setLockDraft(cfg.lockLocal);
+            setCfg((c) => ({ ...c, locked: false }));
+          } else {
+            /* travar: usa o valor que está no draft ou no editLocal se vier de select */
+            const v = (localValues.length > 0 ? editLocal : lockDraft).trim();
+            if (!v) {
+              showToast("Selecione ou digite um local antes de travar.");
+              return;
+            }
+            setCfg((c) => ({ ...c, lockLocal: v, locked: true }));
+            setEditLocal(
+              v,
+            ); /* garante que o campo editável reflete o valor travado */
+          }
+        }
+
+        async function handleFile(e) {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            const r = await parseCsvFile(file);
+            setCsv({
+              headers: r.headers,
+              rows: r.rows,
+              errors: r.errors,
+              delimiter: r.delimiter,
+            });
+            const mapping = autoMapHeaders(r.headers);
+            const sCols = defaultSearchCols(r.headers, mapping);
+            setCfg((c) => ({ ...c, mapping, searchCols: sCols }));
+            setGenericCol(mapping.npat || r.headers[0] || "");
+            const size =
+              file.size > 1024
+                ? (file.size / 1024).toFixed(1) + " KB"
+                : file.size + " B";
+            setFileMeta({
+              name: file.name,
+              mod: new Date(file.lastModified).toLocaleDateString("pt-BR"),
+              load: new Date().toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              size,
+              rows: r.rows.length,
+              cols: r.headers.length,
+              delim: r.delimiter === "\t" ? "TAB" : '"' + r.delimiter + '"',
+              errs: r.errors.length,
+            });
+            setParseInfo(
+              r.errors.length
+                ? "PapaParse: " + r.errors.length + " aviso(s)"
+                : null,
+            );
+            showToast("Base carregada: " + r.rows.length + " registros");
+          } catch (err) {
+            showToast("Erro ao ler o arquivo.");
+            setParseInfo("Erro: " + String(err));
+          }
+        }
+
+        function consultar(npatVal) {
+          const n = (npatVal ?? npat).trim();
+          if (!n) {
+            setCurrent(null);
+            return;
+          }
+          if (!cfg.mapping.npat) {
+            showToast("Configure a coluna NPAT em Config.");
+            return;
+          }
+          const row = csv.rows.find(
+            (r) => String(r[cfg.mapping.npat] || "").trim() === n,
+          );
+          const get = (col) =>
+            col && row ? String(row[col] ?? "").trim() : "";
+          const localBase = get(cfg.mapping.local);
+          /* FIX #1 - se travado, local conferido já vem do lock; senão usa base */
+          const initLocal = cfg.locked ? cfg.lockLocal : localBase;
+          if (row) {
+            setCurrent({
+              npat: n,
+              descricao: get(cfg.mapping.descricao),
+              localBase,
+              estadoBase: get(cfg.mapping.estado),
+              _rawRow: row,
+              localAtual: initLocal,
+              estadoAtual: get(cfg.mapping.estado),
+              obs: "",
+              encontrado: true,
+              status: "regular",
+              detalhe: [],
+            });
+            setEditLocal(initLocal);
+            setEditEstado(get(cfg.mapping.estado));
+          } else {
+            setCurrent({
+              npat: n,
+              descricao: "",
+              localBase: "",
+              estadoBase: "",
+              _rawRow: null,
+              localAtual: cfg.locked ? cfg.lockLocal : "",
+              estadoAtual: "",
+              obs: "",
+              encontrado: false,
+              status: "irregular",
+              detalhe: ["REGISTRO NÃO ENCONTRADO"],
+            });
+            setEditLocal(cfg.locked ? cfg.lockLocal : "");
+            setEditEstado("");
+          }
+          setEditObs("");
+          setShowManual(false);
+        }
+
+        function handleNpatInput(v) {
+          setNpat(v);
+          clearTimeout(debounceRef.current);
+          if (!v.trim()) {
+            setCurrent(null);
+            return;
+          }
+          debounceRef.current = setTimeout(() => consultar(v), 400);
+        }
+
+        function handleNpatKey(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            clearTimeout(debounceRef.current);
+            if (current) adicionarItem();
+            else consultar();
+          }
+        }
+
+        /* FIX #2 - bloqueia duplicatas */
+        function adicionarItem() {
+          if (!current) {
+            showToast("Aguarde a consulta.");
+            return;
+          }
+          const npatAlvo = current.npat;
+          if (npatAlvo && npatSet.has(npatAlvo)) {
+            showToast("Este NPAT já está na lista.");
+            return;
+          }
+          const item = validate(
+            {
+              ...current,
+              localAtual: cfg.locked ? cfg.lockLocal : editLocal,
+              estadoAtual: editEstado,
+              obs: editObs,
+            },
+            cfg,
+          );
+          const { _rawRow, ...safe } = item;
+          setItems((prev) => [...prev, safe]);
+          limparAtual();
+          showToast("Item adicionado");
+        }
+
+        function limparAtual() {
+          setCurrent(null);
+          setNpat("");
+          setEditLocal(cfg.locked ? cfg.lockLocal : "");
+          setEditEstado("");
+          setEditObs("");
+          setShowManual(false);
+          clearTimeout(debounceRef.current);
+          setTimeout(() => npatRef.current?.focus(), 50);
+        }
+
+        function adicionarManual() {
+          /* manual sem NPAT: permite; com NPAT: verifica duplicata */
+          const npatAlvo = npat.trim();
+          if (npatAlvo && npatSet.has(npatAlvo)) {
+            showToast("Este NPAT já está na lista.");
+            return;
+          }
+          const det =
+            manualMotivo === "sem_id"
+              ? ["SEM IDENTIFICAÇÃO DE PATRIMÔNIO"]
+              : ["REGISTRO NÃO ENCONTRADO"];
+          setItems((prev) => [
+            ...prev,
+            {
+              npat: npatAlvo,
+              descricao: manualDesc,
+              localBase: "",
+              estadoBase: "",
+              localAtual: manualLocal,
+              estadoAtual: manualEstado,
+              obs: "",
+              encontrado: false,
+              status: "irregular",
+              detalhe: det,
+            },
+          ]);
+          setShowManual(false);
+          setManualDesc("");
+          setManualLocal("");
+          setManualEstado("");
+          limparAtual();
+          showToast("Item manual adicionado");
+        }
+
+        function editItem(idx, field, value) {
+          const globalIdx = items.indexOf(filteredItems[idx]);
+          if (globalIdx < 0) return;
+          setItems((prev) => {
+            const n = [...prev];
+            n[globalIdx] = { ...n[globalIdx], [field]: value };
+            if (field === "localAtual" || field === "estadoAtual")
+              n[globalIdx] = validate(n[globalIdx], cfg);
+            return n;
+          });
+        }
+
+        function removeItem(idx) {
+          const globalIdx = items.indexOf(filteredItems[idx]);
+          if (globalIdx < 0) return;
+          setItems((prev) => prev.filter((_, i) => i !== globalIdx));
+        }
+
+        function clearTable() {
+          if (window.confirm("Limpar toda a tabela?")) setItems([]);
+        }
+
+        function runSearch() {
+          const t = norm(genericTerm);
+          const col = genericCol;
+          if (!t || !col) return;
+          setGenericResults(
+            csv.rows
+              .filter((r) => norm(r[col] || "").includes(t))
+              .slice(0, 200),
+          );
+          setSelectedRows(new Set());
+        }
+
+        function toggleRowSelect(i) {
+          setSelectedRows((prev) => {
+            const n = new Set(prev);
+            n.has(i) ? n.delete(i) : n.add(i);
+            return n;
+          });
+        }
+        function toggleSelectAll() {
+          if (!genericResults) return;
+          setSelectedRows(
+            selectedRows.size === genericResults.length
+              ? new Set()
+              : new Set(genericResults.map((_, i) => i)),
+          );
+        }
+
+        /* FIX #2 - adicionarSelecionados também filtra duplicatas */
+        function adicionarSelecionados() {
+          if (!genericResults || selectedRows.size === 0) {
+            showToast("Selecione ao menos um item.");
+            return;
+          }
+          const novos = [];
+          const duplicados = [];
+          selectedRows.forEach((i) => {
+            const row = genericResults[i];
+            const n = String(row[cfg.mapping.npat] || "").trim();
+            if (n && npatSet.has(n)) {
+              duplicados.push(n);
+              return;
+            }
+            const get = (col) => (col ? String(row[col] ?? "").trim() : "");
+            const localBase = get(cfg.mapping.local);
+            const localObs = cfg.locked ? cfg.lockLocal : localBase;
+            novos.push(
+              validate(
+                {
+                  npat: n,
+                  descricao: get(cfg.mapping.descricao),
+                  localBase,
+                  estadoBase: get(cfg.mapping.estado),
+                  localAtual: localObs,
+                  estadoAtual: get(cfg.mapping.estado),
+                  obs: "",
+                  encontrado: true,
+                  status: "regular",
+                  detalhe: [],
+                },
+                cfg,
+              ),
+            );
+          });
+          if (novos.length) setItems((prev) => [...prev, ...novos]);
+          setSelectedRows(new Set());
+          const msg =
+            novos.length +
+            " adicionado(s)" +
+            (duplicados.length
+              ? " · " + duplicados.length + " duplicado(s) ignorado(s)"
+              : "");
+          showToast(msg);
+          if (novos.length) setView("conf");
+        }
+
+        function usarResultadoUnico(row) {
+          const n = row[cfg.mapping.npat] || "";
+          setNpat(n);
+          consultar(n);
+          setView("conf");
+        }
+
+        const activeCols =
+          cfg.searchCols && cfg.searchCols.length
+            ? cfg.searchCols.filter((h) => csv.headers.includes(h))
+            : defaultSearchCols(csv.headers, cfg.mapping);
+
+        function toggleSearchCol(h) {
+          setCfg((c) => {
+            const cur =
+              c.searchCols && c.searchCols.length
+                ? c.searchCols
+                : defaultSearchCols(csv.headers, c.mapping);
+            const next = cur.includes(h)
+              ? cur.filter((x) => x !== h)
+              : [...cur, h];
+            return { ...c, searchCols: next.length ? next : cur };
+          });
+        }
+
+        function exportCSV() {
+          if (!items.length) {
+            alert("Nenhum item.");
+            return;
+          }
+          const hdr =
+            "NPAT;Descrição;Local base;Local conferido;Estado base;Est. conferido;Status;Detalhamento;Obs.";
+          const lines = items.map((i) =>
+            [
+              i.npat,
+              i.descricao,
+              i.localBase,
+              i.localAtual,
+              i.estadoBase,
+              i.estadoAtual,
+              i.status.toUpperCase(),
+              i.detalhe.join(" | "),
+              i.obs,
+            ]
+              .map((v) => '"' + String(v || "").replace(/"/g, '""') + '"')
+              .join(";"),
+          );
+          dl(
+            [hdr, ...lines].join("\n"),
+            "text/csv;charset=utf-8",
+            "npat-control.csv",
+          );
+        }
+
+        function exportHTML() {
+          if (!items.length) {
+            alert("Nenhum item.");
+            return;
+          }
+          const rows = items
+            .map(
+              (i) =>
+                "<tr><td>" +
+                esc(i.npat) +
+                "</td><td>" +
+                esc(i.descricao) +
+                "</td><td>" +
+                esc(i.localBase) +
+                "</td><td>" +
+                esc(i.localAtual) +
+                "</td><td>" +
+                esc(i.estadoBase) +
+                "</td><td>" +
+                esc(i.estadoAtual) +
+                "</td><td>" +
+                esc(i.status.toUpperCase()) +
+                "</td><td>" +
+                esc(i.detalhe.join(" | ")) +
+                "</td><td>" +
+                esc(i.obs) +
+                "</td></tr>",
+            )
+            .join("");
+          const html =
+            '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>NPAT CONTROL</title><style>body{font-family:Arial,sans-serif;padding:20px;font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:7px;text-align:left;vertical-align:top}th{background:#f5f5f5}</style></head><body><h2>NPAT CONTROL</h2><p>Total: ' +
+            items.length +
+            " itens</p><table><thead><tr><th>NPAT</th><th>Descrição</th><th>Local base</th><th>Local conf.</th><th>Estado base</th><th>Est. conf.</th><th>Status</th><th>Detalhamento</th><th>Obs.</th></tr></thead><tbody>" +
+            rows +
+            "</tbody></table></body></html>";
+          dl(html, "text/html;charset=utf-8", "npat-control.html");
+        }
+
+        function dl(content, mime, name) {
+          const a = Object.assign(document.createElement("a"), {
+            href: URL.createObjectURL(new Blob([content], { type: mime })),
+            download: name,
+          });
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+
+        const total = items.length,
+          reg = items.filter((i) => i.status === "regular").length,
+          atu = items.filter((i) => i.status === "atualizar").length,
+          irr = items.filter((i) => i.status === "irregular").length;
+        const lv = localValues;
+
+        /* FIX #2 - aviso de duplicata em tempo real */
+        const isDuplicate =
+          !!current && !!current.npat && npatSet.has(current.npat);
+
+        /* FIX #1 - componente de campo local com cadeado */
+        function LocalLockField() {
+          const locked = cfg.locked;
+          if (locked) {
+            return (
+              <div className={"lock-wrap is-locked"}>
+                <input
+                  className="lock-inp"
+                  disabled
+                  value={cfg.lockLocal}
+                  readOnly
+                />
+                <button
+                  className="lock-btn"
+                  onClick={toggleLock}
+                  title="Destravar local"
+                >
+                  🔒
+                </button>
+              </div>
+            );
+          }
+          if (lv.length > 0) {
+            /* tem lista de locais: select + cadeado */
+            return (
+              <div className={"lock-wrap" + (editLocal ? "" : " ")}>
+                <select
+                  className="lock-inp-sel"
+                  value={editLocal}
+                  onChange={(e) => setEditLocal(e.target.value)}
+                >
+                  <option value="">—</option>
+                  {lv.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="lock-btn"
+                  onClick={toggleLock}
+                  title="Travar este local"
+                >
+                  🔓
+                </button>
+              </div>
+            );
+          }
+          /* sem lista: input livre + cadeado */
+          return (
+            <div className="lock-wrap">
+              <input
+                className="lock-inp"
+                value={lockDraft}
+                placeholder="Local observado"
+                onChange={(e) => {
+                  setLockDraft(e.target.value);
+                  setEditLocal(e.target.value);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && toggleLock()}
+              />
+              <button
+                className="lock-btn"
+                onClick={toggleLock}
+                title="Travar este local"
+              >
+                🔓
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <div className="app">
+            <header className="header">
+              <span
+                className="brand"
+                onClick={() => setView("conf")}
+                style={{ cursor: "pointer" }}
+              >
+                NPAT CONTROL
+              </span>
+              <nav className="nav">
+                {[
+                  ["base", "CONSULTA"],
+                  ["config", "CONFIGURAÇÕES"],
+                  ["rel", "RELATÓRIOS"],
+                ].map(([v, l]) => (
+                  <button
+                    key={v}
+                    className={"nav-btn" + (view === v ? " active" : "")}
+                    onClick={() => setView(v)}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </nav>
+            </header>
+
+            <div className="main">
+              {/* ═══ CONFERÊNCIA: layout fixo, só a lista rola ═══ */}
+              {view === "conf" && (
+                <div className="conf-host">
+                  <div className="conf-layout">
+                    {/* zona superior fixa */}
+                    <div className="conf-top">
+                      <div className="panel" style={{ borderRadius: 14 }}>
+                        {/* hero: input + ✓ */}
+                        <div className="consult-hero">
+                          <div className="consult-npat">
+                            <input
+                              ref={npatRef}
+                              value={npat}
+                              placeholder="Nº de patrimônio"
+                              onChange={(e) => handleNpatInput(e.target.value)}
+                              onKeyDown={handleNpatKey}
+                              autoComplete="off"
+                              inputMode="numeric"
+                            />
+                          </div>
+                          <button
+                            className="btn-add-hero"
+                            disabled={!current || isDuplicate}
+                            onClick={adicionarItem}
+                            title="Adicionar à lista"
+                          >
+                            ✓
+                          </button>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            marginBottom: 12,
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                          }}
+                        >
+                          {/* LOCAL CONFERIDO */}
+                          <div class style={{ flex: 1, minWidth: 160 }}>
+                            <LocalLockField />
+                          </div>
+
+                          {/* ESTADO CONFERIDO */}
+                          <div style={{ flex: 1, minWidth: 140 }}>
+                            {/*<label className="rfield-lbl"> Estado conferido </label> */}
+                            <select
+                              className="rfield-sel"
+                              value={editEstado}
+                              onChange={(e) => setEditEstado(e.target.value)}
+                            >
+                              <option value="">ESTADO</option>
+                              {ESTADOS.map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* BOTÃO NOVO */}
+                          <div style={{ flexShrink: 0 }}>
+                            <button
+                              className="btn btn-accent"
+                              onClick={() => {
+                                setShowManual(true);
+                                setCurrent(null);
+                              }}
+                            >
+                              + ADICIONAR ITEM IRREGULAR
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* card de resultado - só aparece com NPAT válido ou manual */}
+                        {(current || showManual) && (
+                          <div className="rcard">
+                            {/* ITEM REGULAR em formato icard expansível */}
+                            {current &&
+                              current.status === "regular" &&
+                              !showManual && (
+                                <div
+                                  className={
+                                    "icard" + (rcardExpanded ? " expanded" : "")
+                                  }
+                                >
+                                  <div
+                                    className="ic-summary"
+                                    onClick={() =>
+                                      setRcardExpanded(!rcardExpanded)
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                  >
+                                    <div className="ic-left">
+                                      <span className="ic-desc">
+                                        {current.descricao}
+                                      </span>
+                                      <span className="ic-npat">
+                                        {current.localBase} •{" "}
+                                        {current.estadoBase}
+                                      </span>
+                                    </div>
+                                    <Badge status="regular" />
+                                  </div>
+
+                                  {rcardExpanded && (
+                                    <div className="ic-body">
+                                      <div className="ic-grid">
+                                        {Object.entries(
+                                          current._rawRow || {},
+                                        ).map(([k, v]) => (
+                                          <div className="ic-field" key={k}>
+                                            <span>{k}</span>
+                                            <strong>{String(v)}</strong>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="ic-footer">
+                                        <button
+                                          className="btn btn-ghost btn-sm"
+                                          onClick={limparAtual}
+                                        >
+                                          Limpar
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                            {/* RESULTADO ATUALIZAR ou IRREGULAR */}
+                            {current &&
+                              current.status !== "regular" &&
+                              !showManual && (
+                                <div className="rcard-inner">
+                                  <div className="rcard-head">
+                                    <span className="rcard-npat">
+                                      {current.npat || "—"}
+                                    </span>
+                                    <Badge status={current.status} />
+                                  </div>
+                                  <div className="rcard-grid">
+                                    <div className="rfield">
+                                      <span className="rfield-lbl">
+                                        Descrição
+                                      </span>
+                                      <span className="rfield-val">
+                                        {current.descricao || "—"}
+                                      </span>
+                                    </div>
+                                    <div className="rfield">
+                                      <span className="rfield-lbl">
+                                        Local base
+                                      </span>
+                                      <span className="rfield-val">
+                                        {current.localBase || "—"}
+                                      </span>
+                                    </div>
+                                    <div className="rfield">
+                                      <span className="rfield-lbl">
+                                        Estado base
+                                      </span>
+                                      <span className="rfield-val">
+                                        {current.estadoBase || "—"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="rcard-divider" />
+                                  {isDuplicate && (
+                                    <div className="dup-warn">
+                                      ⚠ Este NPAT já está na lista de
+                                      conferência.
+                                    </div>
+                                  )}
+                                  <div className="rcard-actions">
+                                    <button
+                                      className="btn btn-ghost btn-sm"
+                                      onClick={limparAtual}
+                                    >
+                                      Limpar
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                            {/* FORMULÁRIO MANUAL - ITEM IRREGULAR */}
+                            {showManual && (
+                              <div className="manual-inner">
+                                <div className="manual-title">
+                                  ITEM IRREGULAR
+                                </div>
+                                <div className="manual-grid">
+                                  <div className="field">
+                                    <label>NPAT</label>
+                                    <input value={npat} readOnly />
+                                  </div>
+                                  <div className="field">
+                                    <label>Descrição</label>
+                                    <input
+                                      value={manualDesc}
+                                      placeholder="Ex.: Cadeira"
+                                      onChange={(e) =>
+                                        setManualDesc(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="field">
+                                    <label>Local</label>
+                                    <input
+                                      value={
+                                        cfg.locked ? cfg.lockLocal : manualLocal
+                                      }
+                                      placeholder="Local observado"
+                                      onChange={(e) =>
+                                        setManualLocal(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="field">
+                                    <label>Estado</label>
+                                    <input
+                                      value={manualEstado}
+                                      placeholder="Ex.: Bom"
+                                      onChange={(e) =>
+                                        setManualEstado(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="field">
+                                    <label>Observação</label>
+                                    <input
+                                      value={editObs}
+                                      placeholder="Opcional"
+                                      onChange={(e) =>
+                                        setEditObs(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="field">
+                                    <label>Motivo</label>
+                                    <select
+                                      value={manualMotivo}
+                                      onChange={(e) =>
+                                        setManualMotivo(e.target.value)
+                                      }
+                                    >
+                                      <option value="sem_id">
+                                        Sem identificação
+                                      </option>
+                                      <option value="nao_encontrado">
+                                        Não encontrado
+                                      </option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <button
+                                  className="btn btn-accent"
+                                  onClick={adicionarManual}
+                                >
+                                  Adicionar
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* zona inferior: cabeçalho fixo + lista que rola */}
+                    <div className="conf-bottom">
+                      <div className="conf-bottom-head">
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 8,
+                          }}
+                        >
+                          <div className="summary-bar">
+                            <span
+                              className={
+                                "spill sp-total" +
+                                (statusFilter === null ? " active-filter" : "")
+                              }
+                              onClick={() => setStatusFilter(null)}
+                            >
+                              <span className="spill-n">{total}</span>Total
+                            </span>
+                            <span
+                              className={
+                                "spill sp-reg" +
+                                (statusFilter === "regular"
+                                  ? " active-filter"
+                                  : "")
+                              }
+                              onClick={() => toggleFilter("regular")}
+                            >
+                              <span className="spill-n">{reg}</span>Regular
+                            </span>
+                            <span
+                              className={
+                                "spill sp-atu" +
+                                (statusFilter === "atualizar"
+                                  ? " active-filter"
+                                  : "")
+                              }
+                              onClick={() => toggleFilter("atualizar")}
+                            >
+                              <span className="spill-n">{atu}</span>Atualizar
+                            </span>
+                            <span
+                              className={
+                                "spill sp-irr" +
+                                (statusFilter === "irregular"
+                                  ? " active-filter"
+                                  : "")
+                              }
+                              onClick={() => toggleFilter("irregular")}
+                            >
+                              <span className="spill-n">{irr}</span>Irregular
+                            </span>
+                            {statusFilter && (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "var(--muted)",
+                                  marginLeft: 2,
+                                }}
+                              >
+                                — {filteredItems.length} exibido(s)
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={clearTable}
+                          >
+                            Limpar tabela
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* FIX #3 - área de scroll confinada */}
+                      <div className="conf-bottom-scroll">
+                        <div className="table-wrap">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>NPAT</th>
+                                <th>Descrição</th>
+                                <th>Local base</th>
+                                <th>Local conf.</th>
+                                <th>Estado base</th>
+                                <th>Est. conf.</th>
+                                <th>Status</th>
+                                <th>Detalhamento</th>
+                                <th>Obs.</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredItems.length === 0 ? (
+                                <tr>
+                                  <td
+                                    colSpan={10}
+                                    style={{
+                                      textAlign: "center",
+                                      color: "var(--hint)",
+                                      padding: 32,
+                                    }}
+                                  >
+                                    {statusFilter
+                                      ? "Nenhum item com este status."
+                                      : "Nenhum item adicionado ainda."}
+                                  </td>
+                                </tr>
+                              ) : (
+                                filteredItems.map((item, idx) => (
+                                  <TableRow
+                                    key={idx}
+                                    item={item}
+                                    idx={idx}
+                                    localValues={lv}
+                                    onEdit={editItem}
+                                    onRemove={removeItem}
+                                  />
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="card-list">
+                          {filteredItems.length === 0 ? (
+                            <div
+                              style={{
+                                textAlign: "center",
+                                color: "var(--hint)",
+                                padding: 32,
+                                fontSize: 13,
+                              }}
+                            >
+                              {statusFilter
+                                ? "Nenhum item com este status."
+                                : "Nenhum item adicionado ainda."}
+                            </div>
+                          ) : (
+                            filteredItems.map((item, idx) => (
+                              <ItemCard
+                                key={idx}
+                                item={item}
+                                idx={idx}
+                                localValues={lv}
+                                onEdit={editItem}
+                                onRemove={removeItem}
+                              />
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ CONSULTA (ex-Base): apenas busca na base ═════════════════ */}
+              {view === "base" && (
+                <div className="tab-scroll">
+                  <div className="tab-container">
+                    <div className="panel">
+                      <div className="ptitle">Consulta na base</div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          alignItems: "flex-end",
+                          flexWrap: "wrap",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <div
+                          className="field"
+                          style={{ flex: 1, minWidth: 140 }}
+                        >
+                          <label>Termo</label>
+                          <input
+                            value={genericTerm}
+                            placeholder="Ex.: PROJETOR"
+                            onChange={(e) => setGenericTerm(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && runSearch()}
+                          />
+                        </div>
+                        <div className="field" style={{ minWidth: 140 }}>
+                          <label>Coluna de busca</label>
+                          <select
+                            value={genericCol}
+                            onChange={(e) => setGenericCol(e.target.value)}
+                          >
+                            {csv.headers.map((h) => (
+                              <option key={h} value={h}>
+                                {h}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button className="btn" onClick={runSearch}>
+                          Pesquisar
+                        </button>
+                      </div>
+
+                      {genericResults && (
+                        <>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              flexWrap: "wrap",
+                              gap: 8,
+                              marginBottom: 6,
+                            }}
+                          >
+                            <span
+                              style={{ fontSize: 12, color: "var(--muted)" }}
+                            >
+                              {genericResults.length} resultado(s) —{" "}
+                              {selectedRows.size} selecionado(s)
+                            </span>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button
+                                className="btn btn-sm"
+                                onClick={toggleSelectAll}
+                              >
+                                {selectedRows.size === genericResults.length &&
+                                genericResults.length > 0
+                                  ? "Desmarcar tudo"
+                                  : "Selecionar tudo"}
+                              </button>
+                              <button
+                                className="btn btn-accent btn-sm"
+                                disabled={selectedRows.size === 0}
+                                onClick={adicionarSelecionados}
+                              >
+                                Adicionar ({selectedRows.size})
+                              </button>
+                            </div>
+                          </div>
+                          <div className="sr-list">
+                            {genericResults.length === 0 ? (
+                              <div
+                                style={{
+                                  padding: 20,
+                                  textAlign: "center",
+                                  color: "var(--hint)",
+                                  fontSize: 13,
+                                }}
+                              >
+                                Nenhum resultado.
+                              </div>
+                            ) : (
+                              genericResults.map((r, i) => {
+                                const nAlvo = String(
+                                  r[cfg.mapping.npat] || "",
+                                ).trim();
+                                const dup = nAlvo && npatSet.has(nAlvo);
+                                return (
+                                  <div
+                                    className="sr-row"
+                                    key={i}
+                                    style={{
+                                      background: selectedRows.has(i)
+                                        ? "var(--ibg)"
+                                        : dup
+                                          ? "#FFF8F7"
+                                          : "",
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="sr-check"
+                                      checked={selectedRows.has(i)}
+                                      onChange={() =>
+                                        !dup && toggleRowSelect(i)
+                                      }
+                                      disabled={dup}
+                                      title={dup ? "Já na lista" : ""}
+                                    />
+                                    <div
+                                      className="sr-cells"
+                                      onClick={() =>
+                                        !dup && usarResultadoUnico(r)
+                                      }
+                                    >
+                                      {activeCols.map((col) => (
+                                        <span
+                                          key={col}
+                                          className={
+                                            "sr-cell" +
+                                            (col === cfg.mapping.npat
+                                              ? " sr-cell-npat"
+                                              : " sr-cell-flex")
+                                          }
+                                          title={r[col] || ""}
+                                          style={{
+                                            color: dup ? "var(--hint)" : "",
+                                          }}
+                                        >
+                                          {r[col] || "—"}
+                                        </span>
+                                      ))}
+                                      {dup && (
+                                        <span
+                                          style={{
+                                            fontSize: 10,
+                                            color: "var(--danger)",
+                                            flexShrink: 0,
+                                          }}
+                                        >
+                                          já adicionado
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "var(--hint)",
+                              marginTop: 6,
+                            }}
+                          >
+                            Clique na linha para consultar individualmente ·
+                            marque a caixa para seleção em lote
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ CONFIG ══════════════════════════════════ */}
+              {view === "config" && (
+                <div className="tab-scroll">
+                  <div className="tab-container" style={{ maxWidth: 720 }}>
+                    {/* carregamento da base — movido de Base para Config */}
+                    <div className="panel">
+                      <div className="ptitle">Carregamento da base</div>
+                      <div className="field" style={{ maxWidth: 420 }}>
+                        <label>Arquivo CSV</label>
+                        <input
+                          type="file"
+                          accept=".csv,.txt"
+                          onChange={handleFile}
+                        />
+                      </div>
+                      {parseInfo && (
+                        <div className="parse-error">{parseInfo}</div>
+                      )}
+                      {fileMeta && (
+                        <>
+                          <div className="meta-grid">
+                            {[
+                              ["Arquivo", fileMeta.name],
+                              ["Modificação", fileMeta.mod],
+                              ["Carregamento", fileMeta.load],
+                              ["Tamanho", fileMeta.size],
+                              ["Linhas", fileMeta.rows],
+                              ["Colunas", fileMeta.cols],
+                            ].map(([l, v]) => (
+                              <div className="meta-cell" key={l}>
+                                <div className="mc-label">{l}</div>
+                                <div className="mc-val" title={String(v)}>
+                                  {v}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 8,
+                              fontSize: 11,
+                              color: "var(--muted)",
+                            }}
+                          >
+                            Delimitador:{" "}
+                            <span style={{ fontFamily: "var(--mono)" }}>
+                              {fileMeta.delim}
+                            </span>
+                            {fileMeta.errs > 0 && (
+                              <span
+                                style={{
+                                  color: "var(--danger)",
+                                  marginLeft: 8,
+                                }}
+                              >
+                                {fileMeta.errs} aviso(s)
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="panel">
+                      <div className="ptitle">Mapeamento de colunas</div>
+                      <p
+                        style={{
+                          fontSize: 13,
+                          color: "var(--muted)",
+                          marginBottom: 14,
+                        }}
+                      >
+                        O sistema detecta automaticamente ao carregar o arquivo.
+                        Ajuste caso necessário.
+                      </p>
+                      <div className="grid-2">
+                        {[
+                          ["npat", "Coluna NPAT"],
+                          ["descricao", "Coluna Descrição"],
+                          ["local", "Coluna Local"],
+                          ["estado", "Coluna Estado"],
+                          ["obs", "Coluna Observação"],
+                        ].map(([k, l]) => (
+                          <div className="field" key={k}>
+                            <label>{l}</label>
+                            <select
+                              value={cfg.mapping[k] || ""}
+                              onChange={(e) =>
+                                setCfg((c) => ({
+                                  ...c,
+                                  mapping: {
+                                    ...c.mapping,
+                                    [k]: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              <option value="">Selecione</option>
+                              {csv.headers.map((h) => (
+                                <option key={h} value={h}>
+                                  {h}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {csv.headers.length > 0 && (
+                      <div className="panel">
+                        <div className="ptitle">
+                          Colunas exibidas na consulta da base
+                        </div>
+                        <p
+                          style={{
+                            fontSize: 13,
+                            color: "var(--muted)",
+                            marginBottom: 10,
+                          }}
+                        >
+                          Selecione quais colunas aparecem nos resultados da
+                          busca em Base.
+                        </p>
+                        <div className="check-grid">
+                          {csv.headers.map((h) => (
+                            <label key={h} className="check-item">
+                              <input
+                                type="checkbox"
+                                checked={activeCols.includes(h)}
+                                onChange={() => toggleSearchCol(h)}
+                              />
+                              <span
+                                style={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {h}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        paddingBottom: 40,
+                      }}
+                    >
+                      <button
+                        className="btn btn-accent"
+                        onClick={() => showToast("Configurações salvas")}
+                      >
+                        Salvar configurações
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <Toast msg={toast} />
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+# Frontend
+app.localhost {
+    reverse_proxy frontend:9000
+}
+
+# PocketBase (API e Admin)
+api.localhost {
+    reverse_proxy pocketbase:8080
+}
